@@ -62,7 +62,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>me.hernancerm.GitTimeline</mainClass>
+                            <mainClass>me.hernancerm.App</mainClass>
                             <addClasspath>true</addClasspath>
                         </manifest>
                     </archive>

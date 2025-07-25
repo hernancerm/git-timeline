@@ -1,7 +1,6 @@
 package me.hernancerm;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -12,7 +11,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
 
 @Command(name = "git-timeline",
@@ -25,13 +23,6 @@ public class GitTimeline implements Callable<Integer> {
 
     public GitTimeline(String[] args) {
         this.args = args;
-    }
-
-    // TODO: Should this class be just the main method?
-    public static void main(String[] args) throws IOException {
-        CommandLine commandLine = new CommandLine(new GitTimeline(args));
-        commandLine.setUnmatchedArgumentsAllowed(true);
-        System.exit(commandLine.execute(args));
     }
 
     @Override

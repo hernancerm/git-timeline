@@ -12,6 +12,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <mainClass>me.hernancerm.App</mainClass>
         <lombok.version>1.18.38</lombok.version>
     </properties>
 
@@ -20,11 +21,6 @@
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
             <version>4.7.7</version>
-        </dependency>
-        <dependency>
-            <groupId>org.graalvm.buildtools</groupId>
-            <artifactId>native-maven-plugin</artifactId>
-            <version>0.11.0</version>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -62,8 +58,8 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>me.hernancerm.App</mainClass>
                             <addClasspath>true</addClasspath>
+                            <mainClass>${mainClass}</mainClass>
                         </manifest>
                     </archive>
                 </configuration>
@@ -73,6 +69,9 @@
 
     <profiles>
         <profile>
+            <!-- GraalVM native image.
+            App execution is faster than the uberjar, but packaging is much slower.
+            -->
             <id>native</id>
             <build>
                 <plugins>
@@ -88,6 +87,38 @@
                                     <goal>compile-no-fork</goal>
                                 </goals>
                                 <phase>package</phase>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <!-- Executable JAR with all dependencies included.
+            Packaging is much faster than the native image, but app execution is slower.
+            -->
+            <id>uber</id>
+            <build>
+                <finalName>${artifactId}</finalName>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-shade-plugin</artifactId>
+                        <version>3.2.1</version>
+                        <configuration>
+                            <!-- https://maven.apache.org/plugins/maven-shade-plugin/examples/executable-jar.html -->
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>${mainClass}</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>shade</goal>
+                                </goals>
                             </execution>
                         </executions>
                     </plugin>

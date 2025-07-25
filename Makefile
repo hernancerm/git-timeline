@@ -1,5 +1,15 @@
-target/git-timeline: check-graalvm-home
+target/git-timeline: check-graalvm-home clean
 	./mvnw -Pnative package
+
+target/git-timeline.jar: clean
+	./mvnw -Puber package
+
+.PHONY: dev
+dev: target/git-timeline.jar
+
+.PHONY: clean
+clean:
+	@mvn clean
 
 .PHONY: check-graalvm-home
 check-graalvm-home:

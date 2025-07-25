@@ -8,4 +8,11 @@ public class Commit {
     private String authorName;
     private String authorDate;
     private String subjectLine;
+
+    public void reset() {
+        hash = null;
+        authorName = null;
+        authorDate = null;
+        subjectLine = null;
+    }
 }

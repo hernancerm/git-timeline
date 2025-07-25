@@ -1,6 +1,5 @@
 package me.hernancerm;
 
-import java.util.List;
 import java.util.concurrent.Callable;
 
 import picocli.CommandLine.Command;
@@ -11,11 +10,11 @@ import picocli.CommandLine.Command;
         description = "A small wrapper for git-log which improves readability.")
 public class GitTimeline implements Callable<Integer> {
 
-    private final List<String> args;
+    private final String[] args;
     private final GitLogProcessBuilder gitLogProcessBuilder;
 
     public GitTimeline(
-            List<String> args,
+            String[] args,
             GitLogProcessBuilder gitLogProcessBuilder
     ) {
         this.args = args;

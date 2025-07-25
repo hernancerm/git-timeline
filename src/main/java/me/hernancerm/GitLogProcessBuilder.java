@@ -3,6 +3,7 @@ package me.hernancerm;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
@@ -12,21 +13,13 @@ import java.util.stream.Stream;
 
 public class GitLogProcessBuilder {
 
-    private static final String HASH = "HASH";
+    private static final String ABBREVIATED_HASH = "ABBREVIATED_HASH";
+    private static final String ABBREVIATED_PARENT_HASHES = "ABBREVIATED_PARENT_HASHES";
     private static final String AUTHOR_NAME = "AUTHOR_NAME";
     private static final String AUTHOR_DATE = "AUTHOR_DATE";
+    private static final String COMMITTER_NAME = "COMMITTER_NAME";
     private static final String SUBJECT_LINE = "SUBJECT_LINE";
-
-    private static final List<String> GIT_LOG_BASE_COMMAND = List.of(
-            "git",
-            "log",
-            "--date=format:%d/%b/%Y",
-            "--pretty="
-                    + HASH + "=%H%n"
-                    + AUTHOR_NAME + "=%an%n"
-                    + AUTHOR_DATE + "=%ad%n"
-                    + SUBJECT_LINE +"=%s%n"
-                    + "END");
+    private static final String REF_NAMES_COLORED = "REF_NAMES";
 
     private static final String KEY_VALUE_REGEX = "^([A-Z_]+)=(.*)$";
     private static final String END_REGEX = "^END$";
@@ -43,9 +36,8 @@ public class GitLogProcessBuilder {
      * @throws IOException If an error occurs reading a line from the reader.
      * @throws InterruptedException If the current thread is interrupted while waiting.
      */
-    public int start(List<String> args, Consumer<Commit> callback) throws IOException, InterruptedException {
-        List<String> command = Stream.concat(GIT_LOG_BASE_COMMAND.stream(), args.stream()).toList();
-        Process process = new ProcessBuilder(command).start();
+    public int start(String[] args, Consumer<Commit> callback) throws IOException, InterruptedException {
+        Process process = new ProcessBuilder(getGitLogCommand(args)).start();
 
         try (
                 var inputStreamReader = new InputStreamReader(process.getErrorStream());
@@ -86,8 +78,11 @@ public class GitLogProcessBuilder {
             Commit commit
     ) {
         switch (serializedAttributeName) {
-            case HASH:
-                commit.setHash(attributeValue);
+            case ABBREVIATED_HASH:
+                commit.setAbbreviatedHash(attributeValue);
+                break;
+            case ABBREVIATED_PARENT_HASHES:
+                commit.setAbbreviatedParentHashes(attributeValue.split("\\s"));
                 break;
             case AUTHOR_NAME:
                 commit.setAuthorName(attributeValue);
@@ -95,9 +90,32 @@ public class GitLogProcessBuilder {
             case AUTHOR_DATE:
                 commit.setAuthorDate(attributeValue);
                 break;
+            case COMMITTER_NAME:
+                commit.setCommitterName(attributeValue);
+                break;
             case SUBJECT_LINE:
                 commit.setSubjectLine(attributeValue);
                 break;
+            case REF_NAMES_COLORED:
+                commit.setRefNamesColored(attributeValue);
+                break;
         }
+    }
+
+    private List<String> getGitLogCommand(String[] args) {
+        return Stream.concat(Stream.of(
+                "git",
+                "log",
+                "--date=format:%d/%b/%Y",
+                "--color=always",
+                "--pretty="
+                        + ABBREVIATED_HASH + "=%h%n"
+                        + ABBREVIATED_PARENT_HASHES + "=%p%n"
+                        + AUTHOR_NAME + "=%an%n"
+                        + AUTHOR_DATE + "=%ad%n"
+                        + SUBJECT_LINE +"=%s%n"
+                        + REF_NAMES_COLORED + "=%C(auto)%d%n"
+                        + "END"),
+                Arrays.stream(args)).toList();
     }
 }

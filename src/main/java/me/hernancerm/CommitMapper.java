@@ -6,13 +6,12 @@ public class CommitMapper {
 
     private CommitMapper() {}
 
-    public static Commit mapToCommit(Map<String, String> rawCommit) {
+    public static Commit mapToCommit(Map<String, String> result) {
         Commit commit = new Commit();
-        // TODO: Use these from constants shared in the git-log command.
-        commit.setHash(rawCommit.get("HASH"));
-        commit.setAuthorName(rawCommit.get("AUTHOR"));
-        commit.setSubjectLine(rawCommit.get("MESSAGE"));
-        commit.setDate(rawCommit.get("DATE"));
+        commit.setHash(result.get(GitLogProcessBuilder.HASH));
+        commit.setAuthorName(result.get(GitLogProcessBuilder.AUTHOR_NAME));
+        commit.setAuthorDate(result.get(GitLogProcessBuilder.AUTHOR_DATE));
+        commit.setSubjectLine(result.get(GitLogProcessBuilder.SUBJECT_LINE));
         return commit;
     }
 }

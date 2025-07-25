@@ -6,6 +6,6 @@ import lombok.Data;
 public class Commit {
     private String hash;
     private String authorName;
+    private String authorDate;
     private String subjectLine;
-    private String date;
 }

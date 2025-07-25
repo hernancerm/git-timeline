@@ -37,3 +37,12 @@ Steps to implement:
 ```
 mvn -Pnative package
 ```
+
+## Notes
+
+```
+// git log --date='format:%d/%b/%Y' --pretty='▶hash▶⏹%H⏹ ▶author▶⏹%an⏹ ▶date▶⏹%ad⏹ ▶message▶⏹%s⏹'
+// git log --date='format:%d/%b/%Y' --pretty='⏹hash⏹⏹%H⏹ ⏹author⏹⏹%an⏹ ⏹date⏹⏹%ad⏹ ⏹message⏹⏹%s⏹'
+// git log --date='format:%d/%b/%Y' --pretty='⏹hash⏹⏹%H⏹ ⏹author⏹⏹%an⏹ ⏹date⏹⏹%ad⏹ ▶message▶%s'
+// git log --date='format:%d/%b/%Y' --pretty='hash=%H%nauthor=%an%ndate=%ad%nmessage=%s%nend'
+```

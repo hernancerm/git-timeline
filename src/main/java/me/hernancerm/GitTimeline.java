@@ -2,6 +2,8 @@ package me.hernancerm;
 
 import java.util.concurrent.Callable;
 
+import org.fusesource.jansi.AnsiConsole;
+
 import picocli.CommandLine.Command;
 
 @Command(name = "git-timeline",
@@ -12,22 +14,23 @@ public class GitTimeline implements Callable<Integer> {
 
     private final String[] args;
     private final GitLogProcessBuilder gitLogProcessBuilder;
+    private final GitLogPrettyPrinter gitLogPrettyPrinter;
 
     public GitTimeline(
             String[] args,
-            GitLogProcessBuilder gitLogProcessBuilder
+            GitLogProcessBuilder gitLogProcessBuilder,
+            GitLogPrettyPrinter gitLogPrettyPrinter
     ) {
         this.args = args;
         this.gitLogProcessBuilder = gitLogProcessBuilder;
+        this.gitLogPrettyPrinter = gitLogPrettyPrinter;
     }
 
     @Override
     public Integer call() throws Exception {
-        return gitLogProcessBuilder.start(args, this::prettyPrint);
-    }
-
-    // TODO: Colored output when expected (colored on terminal, not colored on non-TTY target).
-    private void prettyPrint(Commit commit) {
-        System.out.println(commit);
+        AnsiConsole.systemInstall();
+        int exitCode = gitLogProcessBuilder.start(args, gitLogPrettyPrinter::print);
+        AnsiConsole.systemUninstall();
+        return exitCode;
     }
 }

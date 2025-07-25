@@ -12,6 +12,16 @@ public class GitLogProcessBuilder {
     public static final String AUTHOR_DATE = "AUTHOR_DATE";
     public static final String SUBJECT_LINE = "SUBJECT_LINE";
 
+    /**
+     * Run git-log making it output an easy-to-deserialize format which does not require
+     * escape sequences to correctly capture any possible character for the values, e.g.,
+     * for the subject line. Current constraint: Values which can have a newline character
+     * are not handled correctly, e.g. the body. The deserialization output by this process
+     * is handled by {@link GitLogDeserializer}.
+     * @param args Optional additional args for git-log.
+     * @return A new process for git log with the args.
+     * @throws IOException If an I/O error occurs starting the process.
+     */
     public Process start(List<String> args) throws IOException {
         List<String> command = Stream.concat(Stream.of(
                         "git",

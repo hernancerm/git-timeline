@@ -11,7 +11,8 @@ public class App {
         CommandLine commandLine = new CommandLine(
                 new GitTimeline(
                         Arrays.stream(args).toList(),
-                        new GitLogProcessBuilder()
+                        new GitLogProcessBuilder(),
+                        new GitLogDeserializer()
                 )
         );
         commandLine.setUnmatchedArgumentsAllowed(true);

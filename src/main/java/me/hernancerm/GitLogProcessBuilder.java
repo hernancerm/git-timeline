@@ -30,15 +30,16 @@ public class GitLogProcessBuilder {
             throws IOException, InterruptedException, ExecutionException {
         Process process = new ProcessBuilder(getGitLogCommand(args)).start();
 
-        try (
-                var inputStreamReader = new InputStreamReader(process.getErrorStream());
-                var bufferedReader = new BufferedReader(inputStreamReader)
-        ) {
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                System.err.println(line);
-            }
-        }
+//        try (
+//                var inputStreamReader = new InputStreamReader(process.getErrorStream());
+//                var bufferedReader = new BufferedReader(inputStreamReader)
+//        ) {
+//            String line;
+//            // TODO: For some reason this causes a freeze on big repos. Thread gets stuck here.
+//            while ((line = bufferedReader.readLine()) != null) {
+//                System.err.println(line);
+//            }
+//        }
 
         try (
                 var inputStreamReader = new InputStreamReader(process.getInputStream());
@@ -55,23 +56,25 @@ public class GitLogProcessBuilder {
 
                 String hash = commit.getFullHash();
                 String dateFormat = "--date=format:%d/%b/%Y";
-                CompletableFuture<String> authorNameFuture = gitCommitDao.getItem(hash, "%an");
-                CompletableFuture<String> committerNameFuture = gitCommitDao.getItem(hash, "%cn");
-                CompletableFuture<String> authorDateFuture = gitCommitDao.getItem(hash, "%ad", dateFormat);
-                CompletableFuture<String> refNamesColoredFuture = gitCommitDao.getItem(hash, "%C(auto)%d");
-                CompletableFuture<String> subjectLineFuture = gitCommitDao.getItem(hash, "%s");
+                CompletableFuture<String> authorName = CompletableFuture.supplyAsync(
+                        () -> gitCommitDao.getItem(hash, "%an"));
+                CompletableFuture<String> committerName = CompletableFuture.supplyAsync(
+                        () -> gitCommitDao.getItem(hash, "%cn"));
+                CompletableFuture<String> authorDate = CompletableFuture.supplyAsync(
+                        () -> gitCommitDao.getItem(hash, "%ad", dateFormat));
+                CompletableFuture<String> refNamesColored = CompletableFuture.supplyAsync(
+                        () -> gitCommitDao.getItem(hash, "%C(auto)%d"));
+                CompletableFuture<String> subjectLine = CompletableFuture.supplyAsync(
+                        () -> gitCommitDao.getItem(hash, "%s"));
                 CompletableFuture.allOf(
-                        authorNameFuture,
-                        committerNameFuture,
-                        authorDateFuture,
-                        refNamesColoredFuture,
-                        subjectLineFuture).join();
+                        authorName, committerName, authorDate, refNamesColored, subjectLine)
+                        .join();
 
-                commit.setAuthorName(authorNameFuture.get());
-                commit.setCommitterName(committerNameFuture.get());
-                commit.setAuthorDate(authorDateFuture.get());
-                commit.setSubjectLine(subjectLineFuture.get());
-                commit.setRefNamesColored(refNamesColoredFuture.get());
+                commit.setAuthorName(authorName.get());
+                commit.setCommitterName(committerName.get());
+                commit.setAuthorDate(authorDate.get());
+                commit.setSubjectLine(subjectLine.get());
+                commit.setRefNamesColored(refNamesColored.get());
 
                 callback.accept(commit);
             }

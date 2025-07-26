@@ -9,7 +9,7 @@ public class App {
                 new GitTimeline(
                         args,
                         new GitLogProcessBuilder(),
-                        new GitLogFormatter())
+                        new GitLogPrettyPrinter())
         );
         commandLine.setUnmatchedArgumentsAllowed(true);
         System.exit(commandLine.execute(args));

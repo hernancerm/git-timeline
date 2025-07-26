@@ -1,15 +1,18 @@
+.PHONY: build-binary
+build-binary: target/git-timeline
+
+.PHONY: build-uberjar
+build-uberjar: target/git-timeline.jar
+
 target/git-timeline: check-graalvm-home clean
 	./mvnw -Pnative package
 
 target/git-timeline.jar: clean
 	./mvnw -Puber package
 
-.PHONY: dev
-dev: target/git-timeline.jar
-
 .PHONY: clean
 clean:
-	@mvn clean
+	@./mvnw clean
 
 .PHONY: check-graalvm-home
 check-graalvm-home:

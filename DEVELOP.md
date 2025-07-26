@@ -31,6 +31,7 @@ Steps to implement:
 - Indication of commits with differing author and committer.
 - Clickable text linking to a ticket in a configured issue tracker.
 - Clickable text linking to a pull-request in a configured VCS host.
+- Configuration file: Date format, colors for items.
 
 ## Build GraalVM native image
 

@@ -8,7 +8,7 @@ public class App {
         CommandLine commandLine = new CommandLine(
                 new GitTimeline(
                         args,
-                        new GitLogProcessBuilder(),
+                        new GitLogProcessBuilder(new GitCommitDao()),
                         new GitLogPrettyPrinter())
         );
         commandLine.setUnmatchedArgumentsAllowed(true);

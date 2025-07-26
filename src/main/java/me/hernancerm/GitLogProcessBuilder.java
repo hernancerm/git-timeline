@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -24,7 +26,14 @@ public class GitLogProcessBuilder {
 //    private static final String SUBJECT_LINE = "SUBJECT_LINE";
 //    private static final String REF_NAMES_COLORED = "REF_NAMES";
 
-    public int start(String[] args, Consumer<Commit> callback) throws IOException, InterruptedException {
+    private final GitCommitDao gitCommitDao;
+
+    public GitLogProcessBuilder(GitCommitDao gitCommitDao) {
+        this.gitCommitDao = gitCommitDao;
+    }
+
+    public int start(String[] args, Consumer<GitCommit> callback)
+            throws IOException, InterruptedException, ExecutionException {
         Process process = new ProcessBuilder(getGitLogCommand(args)).start();
 
         try (
@@ -44,15 +53,34 @@ public class GitLogProcessBuilder {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
                 ObjectMapper objectMapper = new ObjectMapper();
+
                 int indexOfSerializedCommit = line.indexOf('{');
                 // Substring required due to the option `--graph` of git-log.
-                Commit commit = objectMapper.readValue(line.substring(indexOfSerializedCommit), Commit.class);
+                GitCommit commit = objectMapper.readValue(line.substring(indexOfSerializedCommit), GitCommit.class);
                 commit.setGitLogFullLine(line);
+
+                String hash = commit.getFullHash();
+                String dateFormat = "--date=format:%d/%b/%Y";
+                CompletableFuture<String> authorNameFuture = gitCommitDao.getItem(hash, "%an");
+                CompletableFuture<String> authorDateFuture = gitCommitDao.getItem(hash, "%ad", dateFormat);
+                CompletableFuture<String> refNamesColoredFuture = gitCommitDao.getItem(hash, "%C(auto)%d");
+                CompletableFuture<String> subjectLineFuture = gitCommitDao.getItem(hash, "%s");
+                CompletableFuture.allOf(
+                        authorNameFuture,
+                        authorDateFuture,
+                        refNamesColoredFuture,
+                        subjectLineFuture).join();
+
+                commit.setAuthorName(authorNameFuture.get());
+                commit.setAuthorDate(authorDateFuture.get());
+                commit.setSubjectLine(subjectLineFuture.get());
+                commit.setRefNamesColored(refNamesColoredFuture.get());
+
                 callback.accept(commit);
             }
         }
 
-        process.waitFor(1000, TimeUnit.MILLISECONDS);
+        process.waitFor(500, TimeUnit.MILLISECONDS);
         return process.exitValue();
     }
 
@@ -60,8 +88,6 @@ public class GitLogProcessBuilder {
         return Stream.concat(Stream.of(
                 "git",
                 "log",
-                "--date=format:%d/%b/%Y",
-                "--color=always",
                 "--pretty={"
                         + "\"" + FULL_HASH + "\":\"%H\","
                         + "\"" + ABBREVIATED_HASH + "\":\"%h\","

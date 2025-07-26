@@ -1,5 +1,7 @@
 package me.hernancerm;
 
+import static org.fusesource.jansi.Ansi.ansi;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -13,55 +15,59 @@ import java.util.stream.Stream;
 
 public class GitLogProcessBuilder {
 
-    private static final String NAMESPACE = "me/hernancerm/git-timeline/";
-
     private static final String ABBREVIATED_HASH = "ABBREVIATED_HASH";
     private static final String ABBREVIATED_PARENT_HASHES = "ABBREVIATED_PARENT_HASHES";
     private static final String AUTHOR_NAME = "AUTHOR_NAME";
     private static final String AUTHOR_DATE = "AUTHOR_DATE";
     private static final String COMMITTER_NAME = "COMMITTER_NAME";
     private static final String SUBJECT_LINE = "SUBJECT_LINE";
-    private static final String REF_NAMES_COLORED = "REF_NAMES";
+    private static final String REF_NAMES_COLORED = "REF_NAMES_COLORED";
 
+    private static final String COMMIT_BOUNDS_REGEX =
+            "<git-timeline/commit-begin>.*<git-timeline/commit-end>";
     private static final String KEY_VALUE_REGEX =
-            "\\[me/hernancerm/git-timeline/([A-Z_]+)](.*?)\\[me/hernancerm/git-timeline/#]";
-    private static final String COMMIT_BEGIN_END_REGEX =
-            "\\[me/hernancerm/git-timeline/<].*\\[me/hernancerm/git-timeline/>]";
+            "<git-timeline/item-begin/([A-Z_]+)>(.*?)<git-timeline/item-end>";
 
-    public int start(String[] args, Function<Commit, String> formatter) throws IOException, InterruptedException {
+    public int start(String[] args, Function<GitCommit, String> formatter) throws IOException, InterruptedException {
         Process process = new ProcessBuilder(getGitLogCommand(args)).start();
 
-        try (
-                var inputStreamReader = new InputStreamReader(process.getErrorStream());
-                var bufferedReader = new BufferedReader(inputStreamReader)
-        ) {
-            bufferedReader.lines().forEach(System.err::println);
-        }
+//        try (
+//                var inputStreamReader = new InputStreamReader(process.getErrorStream());
+//                var bufferedReader = new BufferedReader(inputStreamReader)
+//        ) {
+//            bufferedReader.lines().forEach(System.err::println);
+//        }
 
         try (
                 var inputStreamReader = new InputStreamReader(process.getInputStream());
                 var bufferedReader = new BufferedReader(inputStreamReader)
         ) {
-            Commit commit = new Commit();
-            Pattern pattern = Pattern.compile(KEY_VALUE_REGEX);
-            bufferedReader.lines().forEach(line -> {
-                Matcher matcher = pattern.matcher(line);
-                while (matcher.find()) {
-                    populateCommitAttribute(matcher.group(1), matcher.group(2), commit);
+            String line;
+            GitCommit commit = new GitCommit();
+            Pattern keyValuePattern = Pattern.compile(KEY_VALUE_REGEX);
+            Pattern commitBoundsPattern = Pattern.compile(COMMIT_BOUNDS_REGEX);
+            while ((line = bufferedReader.readLine()) != null) {
+                Matcher keyValuematcher = keyValuePattern.matcher(line);
+                while (keyValuematcher.find()) {
+                    populateCommitAttribute(keyValuematcher.group(1), keyValuematcher.group(2), commit);
                 }
-                System.out.println(line.replaceFirst(COMMIT_BEGIN_END_REGEX, formatter.apply(commit)));
+                Matcher commitBoundsMatcher = commitBoundsPattern.matcher(line);
+                if (commitBoundsMatcher.find()) {
+                    int matchIndex = commitBoundsMatcher.start();
+                    System.out.println(ansi().render(line.substring(0, matchIndex) + formatter.apply(commit)));
+                }
                 commit.reset();
-            });
+            }
         }
 
-        process.waitFor(1000, TimeUnit.MILLISECONDS);
+        process.waitFor(500, TimeUnit.MILLISECONDS);
         return process.exitValue();
     }
 
     private void populateCommitAttribute(
             String serializedAttributeName,
             String attributeValue,
-            Commit commit
+            GitCommit commit
     ) {
         switch (serializedAttributeName) {
             case ABBREVIATED_HASH:
@@ -89,19 +95,27 @@ public class GitLogProcessBuilder {
     }
 
     private List<String> getGitLogCommand(String[] args) {
+
+        // XML-inspired format with these goals: Easy to parse, fast to parse and reasonably resistant to unsanitized
+        // input. Since this is parsed using regex, unsanitized input can only break the format if the exact tags are
+        // in the input, which is unlikely under normal use, but easy to cause if intentional.
+        final String prettyFormat = "<git-timeline/commit-begin>"
+                + "<git-timeline/item-begin/FULL_HASH>%H<git-timeline/item-end>"
+                + "<git-timeline/item-begin/ABBREVIATED_HASH>%h<git-timeline/item-end>"
+                + "<git-timeline/item-begin/ABBREVIATED_PARENT_HASHES>%p<git-timeline/item-end>"
+                + "<git-timeline/item-begin/AUTHOR_NAME>%an<git-timeline/item-end>"
+                + "<git-timeline/item-begin/COMMITTER_NAME>%cn<git-timeline/item-end>"
+                + "<git-timeline/item-begin/AUTHOR_DATE>%ad<git-timeline/item-end>"
+                + "<git-timeline/item-begin/SUBJECT_LINE>%s<git-timeline/item-end>"
+                + "<git-timeline/item-begin/REF_NAMES_COLORED>%C(auto)%d<git-timeline/item-end>"
+                + "<git-timeline/commit-end>";
+
         return Stream.concat(Stream.of(
-                "git",
-                "log",
-                "--date=format:%d/%b/%Y",
-                "--color=always",
-                "--pretty=[" + NAMESPACE + "<]"
-                        + "[" + NAMESPACE + ABBREVIATED_HASH + "]%h[" + NAMESPACE + "#]"
-                        + "[" + NAMESPACE + ABBREVIATED_PARENT_HASHES + "]%p[" + NAMESPACE + "#]"
-                        + "[" + NAMESPACE + AUTHOR_NAME + "]%an[" + NAMESPACE + "#]"
-                        + "[" + NAMESPACE + AUTHOR_DATE + "]%ad[" + NAMESPACE + "#]"
-                        + "[" + NAMESPACE + SUBJECT_LINE +"]%s[" + NAMESPACE + "#]"
-                        + "[" + NAMESPACE + REF_NAMES_COLORED + "]%C(auto)%d[" + NAMESPACE + "#]"
-                        + "[" + NAMESPACE + ">]"),
+                        "git",
+                        "log",
+                        "--color=always",
+                        "--date=format:%d/%b/%Y",
+                        "--pretty=" + prettyFormat),
                 Arrays.stream(args)).toList();
     }
 }

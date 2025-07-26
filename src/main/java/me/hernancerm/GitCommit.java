@@ -3,7 +3,8 @@ package me.hernancerm;
 import lombok.Data;
 
 @Data
-public class Commit {
+public class GitCommit {
+
     private String abbreviatedHash;
     private String[] abbreviatedParentHashes;
     private String authorName;

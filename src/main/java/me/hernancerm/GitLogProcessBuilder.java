@@ -20,12 +20,6 @@ public class GitLogProcessBuilder {
     private static final String ABBREVIATED_HASH = "abbreviatedHash";
     private static final String ABBREVIATED_PARENT_HASHES = "abbreviatedParentHashes";
 
-//    private static final String AUTHOR_NAME = "AUTHOR_NAME";
-//    private static final String AUTHOR_DATE = "AUTHOR_DATE";
-//    private static final String COMMITTER_NAME = "COMMITTER_NAME";
-//    private static final String SUBJECT_LINE = "SUBJECT_LINE";
-//    private static final String REF_NAMES_COLORED = "REF_NAMES";
-
     private final GitCommitDao gitCommitDao;
 
     public GitLogProcessBuilder(GitCommitDao gitCommitDao) {
@@ -62,16 +56,19 @@ public class GitLogProcessBuilder {
                 String hash = commit.getFullHash();
                 String dateFormat = "--date=format:%d/%b/%Y";
                 CompletableFuture<String> authorNameFuture = gitCommitDao.getItem(hash, "%an");
+                CompletableFuture<String> committerNameFuture = gitCommitDao.getItem(hash, "%cn");
                 CompletableFuture<String> authorDateFuture = gitCommitDao.getItem(hash, "%ad", dateFormat);
                 CompletableFuture<String> refNamesColoredFuture = gitCommitDao.getItem(hash, "%C(auto)%d");
                 CompletableFuture<String> subjectLineFuture = gitCommitDao.getItem(hash, "%s");
                 CompletableFuture.allOf(
                         authorNameFuture,
+                        committerNameFuture,
                         authorDateFuture,
                         refNamesColoredFuture,
                         subjectLineFuture).join();
 
                 commit.setAuthorName(authorNameFuture.get());
+                commit.setCommitterName(committerNameFuture.get());
                 commit.setAuthorDate(authorDateFuture.get());
                 commit.setSubjectLine(subjectLineFuture.get());
                 commit.setRefNamesColored(refNamesColoredFuture.get());

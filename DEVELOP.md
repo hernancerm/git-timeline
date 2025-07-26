@@ -24,26 +24,12 @@ Steps to implement:
 
 ## Features
 
-- One-line format.
-- Indication of merge commits.
-- Accepts all options from git-log.
-- Has same completions as git-log.
-- Indication of commits with differing author and committer.
-- Clickable text linking to a ticket in a configured issue tracker.
-- Clickable text linking to a pull-request in a configured VCS host.
-- Configuration file: Date format, colors for items.
-
-## Build GraalVM native image
-
-```
-mvn -Pnative package
-```
-
-## Notes
-
-```
-// git log --date='format:%d/%b/%Y' --pretty='▶hash▶⏹%H⏹ ▶author▶⏹%an⏹ ▶date▶⏹%ad⏹ ▶message▶⏹%s⏹'
-// git log --date='format:%d/%b/%Y' --pretty='⏹hash⏹⏹%H⏹ ⏹author⏹⏹%an⏹ ⏹date⏹⏹%ad⏹ ⏹message⏹⏹%s⏹'
-// git log --date='format:%d/%b/%Y' --pretty='⏹hash⏹⏹%H⏹ ⏹author⏹⏹%an⏹ ⏹date⏹⏹%ad⏹ ▶message▶%s'
-// git log --date='format:%d/%b/%Y' --pretty='hash=%H%nauthor=%an%ndate=%ad%nmessage=%s%nend'
-```
+- [x] One-line format.
+- [ ] Indication of merge commits.
+- [ ] Accepts all options from git-log (yes, including `--graph`).
+- [ ] Has same completions as git-log.
+- [ ] Indication of commits with differing author and committer.
+- [ ] Clickable text linking to a ticket in a configured issue tracker.
+- [ ] Clickable text linking to a pull-request in a configured VCS host.
+- [ ] Configuration file: Date format, colors for items.
+- [ ] Works well on big repos.

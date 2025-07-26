@@ -6,12 +6,14 @@ import java.io.InputStreamReader;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class GitLogProcessBuilder {
+
+    private static final String NAMESPACE = "me/hernancerm/git-timeline/";
 
     private static final String ABBREVIATED_HASH = "ABBREVIATED_HASH";
     private static final String ABBREVIATED_PARENT_HASHES = "ABBREVIATED_PARENT_HASHES";
@@ -21,22 +23,12 @@ public class GitLogProcessBuilder {
     private static final String SUBJECT_LINE = "SUBJECT_LINE";
     private static final String REF_NAMES_COLORED = "REF_NAMES";
 
-    private static final String KEY_VALUE_REGEX = "^([A-Z_]+)=(.*)$";
-    private static final String END_REGEX = "^END$";
+    private static final String KEY_VALUE_REGEX =
+            "\\[me/hernancerm/git-timeline/([A-Z_]+)](.*?)\\[me/hernancerm/git-timeline/#]";
+    private static final String COMMIT_BEGIN_END_REGEX =
+            "\\[me/hernancerm/git-timeline/<].*\\[me/hernancerm/git-timeline/>]";
 
-    /**
-     * Run git-log making it output an easy-to-deserialize format which does not require
-     * escape sequences to correctly capture any possible characters. Current constraint:
-     * Values which can have a newline character are not handled correctly, e.g. the body.
-     * For each commit perform the callback.
-     *
-     * @param args Optional additional args for git-log.
-     * @param callback What to do for each deserialized commit.
-     * @return The exit code of git-log process.
-     * @throws IOException If an error occurs reading a line from the reader.
-     * @throws InterruptedException If the current thread is interrupted while waiting.
-     */
-    public int start(String[] args, Consumer<Commit> callback) throws IOException, InterruptedException {
+    public int start(String[] args, Function<Commit, String> formatter) throws IOException, InterruptedException {
         Process process = new ProcessBuilder(getGitLogCommand(args)).start();
 
         try (
@@ -53,18 +45,12 @@ public class GitLogProcessBuilder {
             Commit commit = new Commit();
             Pattern pattern = Pattern.compile(KEY_VALUE_REGEX);
             bufferedReader.lines().forEach(line -> {
-                if (line.matches(END_REGEX)) {
-                    callback.accept(commit);
-                    commit.reset();
-                } else {
-                    Matcher matcher = pattern.matcher(line);
-                    if (!matcher.matches()) {
-                        throw new IllegalStateException(String.format(
-                                "All lines without the end delimiter '%s' must have a key." +
-                                        " Line without key: %s", END_REGEX, line));
-                    }
+                Matcher matcher = pattern.matcher(line);
+                while (matcher.find()) {
                     populateCommitAttribute(matcher.group(1), matcher.group(2), commit);
                 }
+                System.out.println(line.replaceFirst(COMMIT_BEGIN_END_REGEX, formatter.apply(commit)));
+                commit.reset();
             });
         }
 
@@ -108,14 +94,14 @@ public class GitLogProcessBuilder {
                 "log",
                 "--date=format:%d/%b/%Y",
                 "--color=always",
-                "--pretty="
-                        + ABBREVIATED_HASH + "=%h%n"
-                        + ABBREVIATED_PARENT_HASHES + "=%p%n"
-                        + AUTHOR_NAME + "=%an%n"
-                        + AUTHOR_DATE + "=%ad%n"
-                        + SUBJECT_LINE +"=%s%n"
-                        + REF_NAMES_COLORED + "=%C(auto)%d%n"
-                        + "END"),
+                "--pretty=[" + NAMESPACE + "<]"
+                        + "[" + NAMESPACE + ABBREVIATED_HASH + "]%h[" + NAMESPACE + "#]"
+                        + "[" + NAMESPACE + ABBREVIATED_PARENT_HASHES + "]%p[" + NAMESPACE + "#]"
+                        + "[" + NAMESPACE + AUTHOR_NAME + "]%an[" + NAMESPACE + "#]"
+                        + "[" + NAMESPACE + AUTHOR_DATE + "]%ad[" + NAMESPACE + "#]"
+                        + "[" + NAMESPACE + SUBJECT_LINE +"]%s[" + NAMESPACE + "#]"
+                        + "[" + NAMESPACE + REF_NAMES_COLORED + "]%C(auto)%d[" + NAMESPACE + "#]"
+                        + "[" + NAMESPACE + ">]"),
                 Arrays.stream(args)).toList();
     }
 }

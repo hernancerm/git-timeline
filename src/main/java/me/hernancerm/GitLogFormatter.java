@@ -2,14 +2,15 @@ package me.hernancerm;
 
 import static org.fusesource.jansi.Ansi.ansi;
 
-public class GitLogPrettyPrinter {
+public class GitLogFormatter {
 
-    public void print(Commit commit) {
-        System.out.println(ansi().render(
+    public String format(Commit commit) {
+        return ansi().render(
                 "@|yellow " + commit.getAbbreviatedHash() + "|@"
                         + " @|green " + commit.getAuthorName() + "|@"
                         + " @|cyan " + commit.getAuthorDate() + "|@"
                         + commit.getRefNamesColored()
-                        + " " + commit.getSubjectLine()));
+                        + " " + commit.getSubjectLine())
+                .toString();
     }
 }

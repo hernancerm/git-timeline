@@ -14,12 +14,12 @@ public class GitTimeline implements Callable<Integer> {
 
     private final String[] args;
     private final GitLogProcessBuilder gitLogProcessBuilder;
-    private final GitLogPrettyPrinter gitLogPrettyPrinter;
+    private final GitLogFormatter gitLogPrettyPrinter;
 
     public GitTimeline(
             String[] args,
             GitLogProcessBuilder gitLogProcessBuilder,
-            GitLogPrettyPrinter gitLogPrettyPrinter
+            GitLogFormatter gitLogPrettyPrinter
     ) {
         this.args = args;
         this.gitLogProcessBuilder = gitLogProcessBuilder;
@@ -29,7 +29,7 @@ public class GitTimeline implements Callable<Integer> {
     @Override
     public Integer call() throws Exception {
         AnsiConsole.systemInstall();
-        int exitCode = gitLogProcessBuilder.start(args, gitLogPrettyPrinter::print);
+        int exitCode = gitLogProcessBuilder.start(args, gitLogPrettyPrinter::format);
         AnsiConsole.systemUninstall();
         return exitCode;
     }

@@ -2,8 +2,6 @@ package me.hernancerm;
 
 import java.util.concurrent.Callable;
 
-import org.fusesource.jansi.AnsiConsole;
-
 import picocli.CommandLine.Command;
 
 @Command(name = "git-timeline",
@@ -28,9 +26,6 @@ public class GitTimeline implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        AnsiConsole.systemInstall();
-        int exitCode = gitLogProcessBuilder.start(args, gitLogFormatter::format);
-        AnsiConsole.systemUninstall();
-        return exitCode;
+        return gitLogProcessBuilder.start(args, gitLogFormatter::format);
     }
 }

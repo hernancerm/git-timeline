@@ -13,6 +13,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.fusesource.jansi.AnsiConsole;
+import org.fusesource.jansi.AnsiPrintStream;
+
 public class GitLogProcessBuilder {
 
     // Items.
@@ -39,6 +42,7 @@ public class GitLogProcessBuilder {
 //        }
 
         try (
+                AnsiPrintStream ansiPrintStream = AnsiConsole.out();
                 var inputStreamReader = new InputStreamReader(process.getInputStream());
                 var bufferedReader = new BufferedReader(inputStreamReader)
         ) {
@@ -58,7 +62,7 @@ public class GitLogProcessBuilder {
                     populateCommitAttribute(matcher.group(1), matcher.group(2), commit);
                 } while (matcher.find());
                 // Substring is needed to account for the git-log option `--graph`.
-                System.out.println(ansi().render(line.substring(0, startIndex) + formatter.apply(commit)));
+                ansiPrintStream.println(ansi().render(line.substring(0, startIndex) + formatter.apply(commit)));
                 commit.reset();
             }
         }

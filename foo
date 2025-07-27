@@ -1,0 +1,3 @@
+#!/bin/zsh -f
+
+echo -n "\e[3mFOO\e[0m" | less -R

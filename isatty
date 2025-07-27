@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Check if stdout is a terminal
+if [ -t 1 ]; then
+    # stdout is a terminal
+    echo 1
+else
+    # Check if the current process is part of a pipeline that includes 'less'
+    if ps -o comm= -p $$ | grep -q 'less'; then
+        # If the process is 'less', then stdout is piped to less
+        echo 1
+    else
+        # Otherwise, stdout is not a terminal, nor piped to less
+        echo 0
+    fi
+fi

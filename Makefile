@@ -1,22 +1,11 @@
-.PHONY: build-binary
-build-binary: target/git-timeline
+.PHONY: uber
+uber:
+	./mvnw -Puberjar clean package
 
-.PHONY: build-uberjar
-build-uberjar: target/git-timeline.jar
-
-target/git-timeline: check-graalvm-home clean
-	./mvnw -Pnative package
-
-target/git-timeline.jar: clean
-	./mvnw -Puber package
-
-.PHONY: clean
-clean:
-	@./mvnw clean
-
-.PHONY: check-graalvm-home
-check-graalvm-home:
+.PHONY: bin
+bin:
 ifndef GRAALVM_HOME
 	$(error Cannot build native image. The environment variable GRAALVM_HOME is undefined. \
 	Download GraalVM for Java 21 and set the variable: https://www.graalvm.org/downloads)
 endif
+	./mvnw -Pnative clean package

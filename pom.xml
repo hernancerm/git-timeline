@@ -102,7 +102,7 @@
             <!-- Executable JAR with all dependencies included.
             Packaging is much faster than the native image, but app execution is slower.
             -->
-            <id>uber</id>
+            <id>uberjar</id>
             <build>
                 <finalName>${artifactId}</finalName>
                 <plugins>

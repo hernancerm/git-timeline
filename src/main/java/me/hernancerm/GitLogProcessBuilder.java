@@ -14,22 +14,23 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.fusesource.jansi.AnsiConsole;
+import org.fusesource.jansi.AnsiMode;
 import org.fusesource.jansi.AnsiPrintStream;
 
 public class GitLogProcessBuilder {
 
     // Items.
-    private static final String ITEM_ABBREVIATED_HASH = "ABBREVIATED_HASH";
-    private static final String ITEM_ABBREVIATED_PARENT_HASHES = "ABBREVIATED_PARENT_HASHES";
-    private static final String ITEM_AUTHOR_NAME = "AUTHOR_NAME";
-    private static final String ITEM_AUTHOR_DATE = "AUTHOR_DATE";
-    private static final String ITEM_COMMITTER_NAME = "COMMITTER_NAME";
-    private static final String ITEM_SUBJECT_LINE = "SUBJECT_LINE";
-    private static final String ITEM_REF_NAMES_COLORED = "REF_NAMES_COLORED";
+    private static final String ITEM_ABBREVIATED_HASH = "abbreviated-hash";
+    private static final String ITEM_ABBREVIATED_PARENT_HASHES = "abbreviated-parent-hashes";
+    private static final String ITEM_AUTHOR_NAME = "author-name";
+    private static final String ITEM_AUTHOR_DATE = "author-date";
+    private static final String ITEM_COMMITTER_NAME = "committer-name";
+    private static final String ITEM_SUBJECT_LINE = "subject-line";
+    private static final String ITEM_REF_NAMES_COLORED = "ref-names-colored";
 
     // Capture groups: 1:Item, 2:Value.
     private static final String REGEX_TAG =
-            "<hernancerm[.]git-timeline[.]([A-Z_]+)>(.*?)</hernancerm[.]git-timeline[.]\\1>";
+            "<hernancerm[.]git-timeline[.]([a-z-]+)>(.*?)</hernancerm[.]git-timeline[.]\\1>";
 
     public int start(String[] args, Function<GitCommit, String> formatter) throws IOException, InterruptedException {
         Process process = new ProcessBuilder(getGitLogCommand(args)).start();
@@ -48,6 +49,7 @@ public class GitLogProcessBuilder {
         ) {
             String line;
             GitCommit commit = new GitCommit();
+            setColorMode(ansiPrintStream, args);
             Pattern pattern = Pattern.compile(REGEX_TAG);
             while ((line = bufferedReader.readLine()) != null) {
                 int startIndex;
@@ -69,6 +71,22 @@ public class GitLogProcessBuilder {
 
         process.waitFor(500, TimeUnit.MILLISECONDS);
         return process.exitValue();
+    }
+
+    private void setColorMode(AnsiPrintStream ansiPrintStream, String[] args) {
+        for (String arg : args) {
+            switch (arg) {
+                case "--color=always":
+                    ansiPrintStream.setMode(AnsiMode.Force);
+                    break;
+                case "--color=never":
+                    ansiPrintStream.setMode(AnsiMode.Strip);
+                    break;
+                case "--color=auto":
+                    ansiPrintStream.setMode(AnsiMode.Default);
+                    break;
+            }
+        }
     }
 
     private void populateCommitAttribute(
@@ -104,30 +122,30 @@ public class GitLogProcessBuilder {
     private List<String> getGitLogCommand(String[] args) {
 
         final String prettyFormat = String.join("",
-                "<hernancerm.git-timeline.FULL_HASH>",
+                "<hernancerm.git-timeline.full-hash>",
                     "%H",
-                "</hernancerm.git-timeline.FULL_HASH>",
-                "<hernancerm.git-timeline.ABBREVIATED_HASH>",
+                "</hernancerm.git-timeline.full-hash>",
+                "<hernancerm.git-timeline.abbreviated-hash>",
                     "%h",
-                "</hernancerm.git-timeline.ABBREVIATED_HASH>",
-                "<hernancerm.git-timeline.ABBREVIATED_PARENT_HASHES>",
+                "</hernancerm.git-timeline.abbreviated-hash>",
+                "<hernancerm.git-timeline.abbreviated-parent-hashes>",
                     "%p",
-                "</hernancerm.git-timeline.ABBREVIATED_PARENT_HASHES>",
-                "<hernancerm.git-timeline.AUTHOR_NAME>",
+                "</hernancerm.git-timeline.abbreviated-parent-hashes>",
+                "<hernancerm.git-timeline.author-name>",
                     "%an",
-                "</hernancerm.git-timeline.AUTHOR_NAME>",
-                "<hernancerm.git-timeline.COMMITTER_NAME>",
+                "</hernancerm.git-timeline.author-name>",
+                "<hernancerm.git-timeline.committer-name>",
                     "%cn",
-                "</hernancerm.git-timeline.COMMITTER_NAME>",
-                "<hernancerm.git-timeline.AUTHOR_DATE>",
+                "</hernancerm.git-timeline.committer-name>",
+                "<hernancerm.git-timeline.author-date>",
                     "%ad",
-                "</hernancerm.git-timeline.AUTHOR_DATE>",
-                "<hernancerm.git-timeline.SUBJECT_LINE>",
+                "</hernancerm.git-timeline.author-date>",
+                "<hernancerm.git-timeline.subject-line>",
                     "%s",
-                "</hernancerm.git-timeline.SUBJECT_LINE>",
-                "<hernancerm.git-timeline.REF_NAMES_COLORED>",
+                "</hernancerm.git-timeline.subject-line>",
+                "<hernancerm.git-timeline.ref-names-colored>",
                     "%C(auto)%d",
-                "</hernancerm.git-timeline.REF_NAMES_COLORED>");
+                "</hernancerm.git-timeline.ref-names-colored>");
 
         return Stream.concat(Stream.of(
                         "git",

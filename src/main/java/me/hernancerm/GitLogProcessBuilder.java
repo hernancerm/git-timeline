@@ -32,16 +32,11 @@ public class GitLogProcessBuilder {
     private static final String REGEX_TAG =
             "<hernancerm[.]git-timeline[.]([a-z-]+)>(.*?)</hernancerm[.]git-timeline[.]\\1>";
 
-    public int start(String[] args, Function<GitCommit, String> formatter) throws IOException, InterruptedException {
+    public int start(String[] args, Function<GitCommit, String> commitFormatter)
+            throws IOException, InterruptedException {
         Process process = new ProcessBuilder(getGitLogCommand(args)).start();
 
-//        try (
-//                var inputStreamReader = new InputStreamReader(process.getErrorStream());
-//                var bufferedReader = new BufferedReader(inputStreamReader)
-//        ) {
-//            bufferedReader.lines().forEach(System.err::println);
-//        }
-
+        // Stdout.
         try (
                 AnsiPrintStream ansiPrintStream = AnsiConsole.out();
                 var inputStreamReader = new InputStreamReader(process.getInputStream());
@@ -64,8 +59,21 @@ public class GitLogProcessBuilder {
                     populateCommitAttribute(matcher.group(1), matcher.group(2), commit);
                 } while (matcher.find());
                 // Substring is needed to account for the git-log option `--graph`.
-                ansiPrintStream.println(ansi().render(line.substring(0, startIndex) + formatter.apply(commit)));
+                ansiPrintStream.println(ansi().render(
+                        line.substring(0, startIndex) + commitFormatter.apply(commit)));
                 commit.reset();
+            }
+        }
+
+        // Stderr.
+        try (
+                AnsiPrintStream ansiPrintStream = AnsiConsole.err();
+                var inputStreamReader = new InputStreamReader(process.getErrorStream());
+                var bufferedReader = new BufferedReader(inputStreamReader)
+        ) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                ansiPrintStream.println(line);
             }
         }
 

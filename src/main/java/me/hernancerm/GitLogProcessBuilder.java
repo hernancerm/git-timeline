@@ -51,17 +51,19 @@ public class GitLogProcessBuilder {
                 Matcher matcher = pattern.matcher(line);
                 if (matcher.find()) {
                     startIndex = matcher.start();
+                    do {
+                        populateCommitAttribute(matcher.group(1), matcher.group(2), commit);
+                    } while (matcher.find());
+                    // Substring is needed to account for the prefixes of the git-log option `--graph`.
+                    // Example prefixes in this case: `* <commit>`, `| * <commit>`.
+                    ansiPrintStream.println(ansi().render(
+                            line.substring(0, startIndex) + commitFormatter.apply(commit)));
+                    commit.reset();
                 } else {
-                    throw new IllegalStateException(
-                            "No tag matched. At least one tag must be matched.");
+                    // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
+                    // just connectors, like `|\` or `|\|`.
+                    ansiPrintStream.println(ansi().render(line));
                 }
-                do {
-                    populateCommitAttribute(matcher.group(1), matcher.group(2), commit);
-                } while (matcher.find());
-                // Substring is needed to account for the git-log option `--graph`.
-                ansiPrintStream.println(ansi().render(
-                        line.substring(0, startIndex) + commitFormatter.apply(commit)));
-                commit.reset();
             }
         }
 

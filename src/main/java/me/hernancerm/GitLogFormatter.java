@@ -19,7 +19,12 @@ public class GitLogFormatter {
                                 + commit.getAuthorName()
                                 + "|@ "
                         + commit.getRefNamesColored()
-                        + " " + commit.getSubjectLine())
+                        + " " + commit.getSubjectLine()
+                        + " " + buildHyperlink("http://example.com", "This is a link"))
                 .toString();
+    }
+
+    private String buildHyperlink(String url, String title) {
+        return "\033]8;;" + url + "\007" + title + "\033]8;;\007";
     }
 }

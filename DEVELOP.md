@@ -34,3 +34,7 @@ Steps to implement:
 - [ ] Configuration file: Date format, colors for items.
 - [ ] Paging works as expected.
 - [x] Works well on big repos.
+
+## Constraints
+
+- No support for listing commits from a repo in a dir different from cwd.

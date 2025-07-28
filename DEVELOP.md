@@ -25,11 +25,12 @@ Steps to implement:
 ## Features
 
 - [x] One-line format.
-- [ ] Indication of merge commits.
-- [x] Accepts all options from git-log (yes, including `--graph`).
+- [x] Indication of merge commits.
 - [ ] Has same completions as git-log.
-- [ ] Indication of commits with differing author and committer.
+- [x] Indication of commits with differing author and committer.
+- [x] Accepts all options from git-log (yes, including `--graph`).
 - [ ] Clickable text linking to a ticket in a configured issue tracker.
 - [ ] Clickable text linking to a pull-request in a configured VCS host.
 - [ ] Configuration file: Date format, colors for items.
+- [ ] Paging works as expected.
 - [x] Works well on big repos.

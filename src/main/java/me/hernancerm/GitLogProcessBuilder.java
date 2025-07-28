@@ -161,7 +161,7 @@ public class GitLogProcessBuilder {
                         "git",
                         "log",
                         "--color=always",
-                        "--date=format:%d/%b/%Y",
+                        "--date=format:%b/%d/%Y",
                         "--pretty=" + prettyFormat),
                 Arrays.stream(args)).toList();
     }

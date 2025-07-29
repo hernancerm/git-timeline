@@ -29,31 +29,8 @@ public class GitLogFormatter {
                                 + commit.getAuthorName()
                                 + "|@ "
                         + commit.getRefNamesColored()
-                        + " " + hyperlinkSubjectLine(getRemoteOriginUrl(), commit.getSubjectLine()))
+                        + " " + hyperlinkSubjectLine(commit.getRemoteOriginUrl(), commit.getSubjectLine()))
                 .toString();
-    }
-
-    private String getRemoteOriginUrl() {
-        Process process;
-
-        try {
-            process = new ProcessBuilder("git", "remote", "get-url", "origin").start();
-        } catch (IOException e) {
-            throw new RuntimeException(
-                    "Error starting git process to get remote url for: origin",
-                    e);
-        }
-
-        try (
-            var inputStreamReader = new InputStreamReader(process.getInputStream());
-            var bufferedReader = new BufferedReader(inputStreamReader)
-        ) {
-            return bufferedReader.readLine();
-        } catch (IOException e) {
-            throw new RuntimeException(
-                    "Error reading remote url for: origin",
-                    e);
-        }
     }
 
     private String hyperlinkSubjectLine(String originRemote, String subjectLine) {

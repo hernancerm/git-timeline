@@ -12,6 +12,7 @@ public class GitCommit {
     private String committerName;
     private String subjectLine;
     private String refNamesColored;
+    private String remoteOriginUrl;
 
     public void reset() {
         abbreviatedHash = null;
@@ -21,5 +22,6 @@ public class GitCommit {
         committerName = null;
         subjectLine = null;
         refNamesColored = null;
+        remoteOriginUrl = null;
     }
 }

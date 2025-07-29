@@ -46,6 +46,7 @@ public class GitLogProcessBuilder {
             GitCommit commit = new GitCommit();
             setColorMode(ansiPrintStream, args);
             Pattern pattern = Pattern.compile(REGEX_TAG);
+            String remoteOriginUrl = getRemoteOriginUrl();
             while ((line = bufferedReader.readLine()) != null) {
                 int startIndex;
                 Matcher matcher = pattern.matcher(line);
@@ -54,6 +55,7 @@ public class GitLogProcessBuilder {
                     do {
                         populateCommitAttribute(matcher.group(1), matcher.group(2), commit);
                     } while (matcher.find());
+                    commit.setRemoteOriginUrl(remoteOriginUrl);
                     // Substring is needed to account for the prefixes of the git-log option `--graph`.
                     // Example prefixes in this case: `* <commit>`, `| * <commit>`.
                     ansiPrintStream.println(ansi().render(
@@ -81,6 +83,29 @@ public class GitLogProcessBuilder {
 
         process.waitFor(500, TimeUnit.MILLISECONDS);
         return process.exitValue();
+    }
+
+    private String getRemoteOriginUrl() {
+        Process process;
+
+        try {
+            process = new ProcessBuilder("git", "remote", "get-url", "origin").start();
+        } catch (IOException e) {
+            throw new RuntimeException(
+                    "Error starting git process to get remote url for: origin",
+                    e);
+        }
+
+        try (
+                var inputStreamReader = new InputStreamReader(process.getInputStream());
+                var bufferedReader = new BufferedReader(inputStreamReader)
+        ) {
+            return bufferedReader.readLine();
+        } catch (IOException e) {
+            throw new RuntimeException(
+                    "Error reading remote url for: origin",
+                    e);
+        }
     }
 
     private void setColorMode(AnsiPrintStream ansiPrintStream, String[] args) {

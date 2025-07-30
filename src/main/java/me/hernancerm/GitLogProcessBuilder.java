@@ -18,16 +18,16 @@ import java.util.stream.Stream;
 public class GitLogProcessBuilder {
 
     // Items.
-    private static final String ITEM_ABBREVIATED_HASH = "abbreviated-hash";
-    private static final String ITEM_ABBREVIATED_PARENT_HASHES = "abbreviated-parent-hashes";
-    private static final String ITEM_AUTHOR_NAME = "author-name";
-    private static final String ITEM_AUTHOR_DATE = "author-date";
-    private static final String ITEM_COMMITTER_NAME = "committer-name";
-    private static final String ITEM_SUBJECT_LINE = "subject-line";
-    private static final String ITEM_REF_NAMES_COLORED = "ref-names-colored";
+    private static final String ABBREVIATED_HASH_ITEM = "abbreviated-hash";
+    private static final String ABBREVIATED_PARENT_HASHES_ITEM = "abbreviated-parent-hashes";
+    private static final String AUTHOR_NAME_ITEM = "author-name";
+    private static final String AUTHOR_DATE_ITEM = "author-date";
+    private static final String COMMITTER_NAME_ITEM = "committer-name";
+    private static final String SUBJECT_LINE_ITEM = "subject-line";
+    private static final String REF_NAMES_COLORED_ITEM = "ref-names-colored";
 
     // Capture groups: 1:Item, 2:Value.
-    private static final String REGEX_TAG =
+    private static final String TAG_REGEX =
             "<hernancerm[.]git-timeline[.]([a-z-]+)>(.*?)</hernancerm[.]git-timeline[.]\\1>";
 
     public int start(String[] args, Function<GitCommit, String> commitFormatter)
@@ -56,7 +56,7 @@ public class GitLogProcessBuilder {
         ) {
             String line;
             GitCommit commit = new GitCommit();
-            Pattern pattern = Pattern.compile(REGEX_TAG);
+            Pattern pattern = Pattern.compile(TAG_REGEX);
             GitRemote gitRemote = getGitRemote();
             while ((line = bufferedReader.readLine()) != null) {
                 int startIndex;
@@ -158,25 +158,25 @@ public class GitLogProcessBuilder {
             GitCommit commit
     ) {
         switch (serializedAttributeName) {
-            case ITEM_ABBREVIATED_HASH:
+            case ABBREVIATED_HASH_ITEM:
                 commit.setAbbreviatedHash(attributeValue);
                 break;
-            case ITEM_ABBREVIATED_PARENT_HASHES:
+            case ABBREVIATED_PARENT_HASHES_ITEM:
                 commit.setAbbreviatedParentHashes(attributeValue.split("\\s"));
                 break;
-            case ITEM_AUTHOR_NAME:
+            case AUTHOR_NAME_ITEM:
                 commit.setAuthorName(attributeValue);
                 break;
-            case ITEM_AUTHOR_DATE:
+            case AUTHOR_DATE_ITEM:
                 commit.setAuthorDate(attributeValue);
                 break;
-            case ITEM_COMMITTER_NAME:
+            case COMMITTER_NAME_ITEM:
                 commit.setCommitterName(attributeValue);
                 break;
-            case ITEM_SUBJECT_LINE:
+            case SUBJECT_LINE_ITEM:
                 commit.setSubjectLine(attributeValue);
                 break;
-            case ITEM_REF_NAMES_COLORED:
+            case REF_NAMES_COLORED_ITEM:
                 commit.setRefNamesColored(attributeValue);
                 break;
         }

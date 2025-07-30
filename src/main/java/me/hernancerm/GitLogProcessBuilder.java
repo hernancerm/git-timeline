@@ -34,7 +34,11 @@ public class GitLogProcessBuilder {
 
     public int start(String[] args, Function<GitCommit, String> commitFormatter)
             throws IOException, InterruptedException {
-        Process process = new ProcessBuilder(getGitLogCommand(args)).start();
+
+        ProcessBuilder processBuilder = new ProcessBuilder(getGitLogCommand(args));
+        // Print stderr to the tty.
+        processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+        Process process = processBuilder.start();
 
         // Stdout.
         try (
@@ -66,18 +70,6 @@ public class GitLogProcessBuilder {
                     // just connectors, like `|\` or `|\|`.
                     ansiPrintStream.println(ansi().render(line));
                 }
-            }
-        }
-
-        // Stderr.
-        try (
-                AnsiPrintStream ansiPrintStream = AnsiConsole.err();
-                var inputStreamReader = new InputStreamReader(process.getErrorStream());
-                var bufferedReader = new BufferedReader(inputStreamReader)
-        ) {
-            String line;
-            while ((line = bufferedReader.readLine()) != null) {
-                ansiPrintStream.println(line);
             }
         }
 

@@ -39,6 +39,8 @@ public class GitLogProcessBuilder {
         Process process = processBuilder.start();
 
         // TODO: Support ${PAGER} env var.
+        //   https://commons.apache.org/proper/commons-text/apidocs/org/apache/commons/text/StringTokenizer.html
+        //   https://docs.oracle.com/javase/8/docs/api/java/io/StreamTokenizer.html
         ProcessBuilder pagerProcessBuilder = new ProcessBuilder("less", "-RXF");
         // Print stderr to the tty.
         pagerProcessBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
@@ -47,6 +49,8 @@ public class GitLogProcessBuilder {
         Process lessProcess = pagerProcessBuilder.start();
 
         // TODO: Support new option `--no-pager`.
+        //   This is supported at the `git` command-level for `git-log`, but here I'm implementing
+        //   it at the `git-timeline` subcommand-level just for the ease of the implementation.
         PrintStream writer = new PrintStream(new BufferedOutputStream(lessProcess.getOutputStream()));
 
         // Stdout.

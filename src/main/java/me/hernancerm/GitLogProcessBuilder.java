@@ -90,7 +90,7 @@ public class GitLogProcessBuilder {
     }
 
     private GitRemote getGitRemote() {
-        GitRemote gitRemote = new GitRemote();
+        GitRemote gitRemote;
         Process process;
 
         try {
@@ -107,6 +107,12 @@ public class GitLogProcessBuilder {
         ) {
             Matcher matcher;
             String originUrl = bufferedReader.readLine();
+
+            if (originUrl == null || originUrl.isEmpty()) {
+                // No Git remote url.
+                return null;
+            }
+
             if (originUrl.matches("^https.*$")) {
                 // HTTPS.
                 // The regex syntax `(?:X)` where `X` is a pattern defines a non-capturing
@@ -128,10 +134,11 @@ public class GitLogProcessBuilder {
                                     + originUrl);
                 }
             } else {
-                // TODO: Work even when there is no supported remote or no remote at all.
-                throw new IllegalStateException(
-                        "Unsupported Git remote protocol. Must be one of: HTTPS, SSH");
+                // Unsupported Git remote protocol.
+                return null;
             }
+
+            gitRemote = new GitRemote();
             gitRemote.setPlatform(GitRemote.Platform.toEnum(matcher.group(1)));
             gitRemote.setRepositoryName(matcher.group(3));
             gitRemote.setOwnerName(matcher.group(2));

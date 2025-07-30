@@ -7,23 +7,26 @@ import java.util.regex.Pattern;
 
 public class GitLogFormatter {
 
-    public String format(GitCommit commit) {
-        boolean isMergeCommit = commit.getAbbreviatedParentHashes().length > 1;
-        boolean authorDiffersFromCommitter = !commit.getAuthorName().equals(
-                commit.getCommitterName());
+    public String format(GitCommit c) {
+        boolean isMergeCommit = c.getAbbreviatedParentHashes().length > 1;
+        boolean authorDiffersFromCommitter = !c.getAuthorName().equals(c.getCommitterName());
         return ansi().render(
                         (isMergeCommit ? "@|bold,yellow " : "@|italic,yellow ")
-                                + commit.getAbbreviatedHash()
+                                + c.getAbbreviatedHash()
                                 + "|@ "
                         + "@|italic,green "
-                                + commit.getAuthorDate()
+                                + c.getAuthorDate()
                                 + "|@ "
                         + (authorDiffersFromCommitter ? "@|bold,cyan " : "@|italic,cyan ")
-                                + commit.getAuthorName()
+                                + c.getAuthorName()
                                 + "|@ "
-                        + commit.getRefNamesColored()
-                        + " " + hyperlinkSubjectLine(commit.getGitRemote(), commit.getSubjectLine()))
-                .toString();
+                        + c.getRefNamesColored()
+                        + " "
+                        + (
+                            c.getGitRemote() != null
+                                    ? hyperlinkSubjectLine(c.getGitRemote(), c.getSubjectLine())
+                                    : c.getSubjectLine()
+                        )).toString();
     }
 
     private String hyperlinkSubjectLine(GitRemote gitRemote, String subjectLine) {

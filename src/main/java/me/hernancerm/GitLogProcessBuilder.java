@@ -20,11 +20,11 @@ public class GitLogProcessBuilder {
     // Items.
     private static final String ABBREVIATED_HASH_ITEM = "abbreviated-hash";
     private static final String ABBREVIATED_PARENT_HASHES_ITEM = "abbreviated-parent-hashes";
+    private static final String REF_NAMES_COLORED_ITEM = "ref-names-colored";
+    private static final String COMMITTER_NAME_ITEM = "committer-name";
     private static final String AUTHOR_NAME_ITEM = "author-name";
     private static final String AUTHOR_DATE_ITEM = "author-date";
-    private static final String COMMITTER_NAME_ITEM = "committer-name";
     private static final String SUBJECT_LINE_ITEM = "subject-line";
-    private static final String REF_NAMES_COLORED_ITEM = "ref-names-colored";
 
     // Capture groups: 1:Item, 2:Value.
     private static final String TAG_REGEX =
@@ -208,21 +208,21 @@ public class GitLogProcessBuilder {
                 "<hernancerm.git-timeline.abbreviated-parent-hashes>",
                     "%p",
                 "</hernancerm.git-timeline.abbreviated-parent-hashes>",
-                "<hernancerm.git-timeline.author-name>",
-                    "%an",
-                "</hernancerm.git-timeline.author-name>",
+                "<hernancerm.git-timeline.ref-names-colored>",
+                    "%C(auto)%d",
+                "</hernancerm.git-timeline.ref-names-colored>",
                 "<hernancerm.git-timeline.committer-name>",
                     "%cn",
                 "</hernancerm.git-timeline.committer-name>",
+                "<hernancerm.git-timeline.author-name>",
+                    "%an",
+                "</hernancerm.git-timeline.author-name>",
                 "<hernancerm.git-timeline.author-date>",
                     "%ad",
                 "</hernancerm.git-timeline.author-date>",
                 "<hernancerm.git-timeline.subject-line>",
                     "%s",
-                "</hernancerm.git-timeline.subject-line>",
-                "<hernancerm.git-timeline.ref-names-colored>",
-                    "%C(auto)%d",
-                "</hernancerm.git-timeline.ref-names-colored>");
+                "</hernancerm.git-timeline.subject-line>");
 
         return Stream.concat(Stream.of(
                         "git",

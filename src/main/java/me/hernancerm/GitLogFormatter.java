@@ -29,19 +29,21 @@ public class GitLogFormatter {
     private String hyperlinkSubjectLine(String originRemote, String subjectLine) {
         String output = subjectLine;
 
-        Pattern remoteUrlPattern = Pattern.compile("@(.*?):(.*?)/");
+        Pattern remoteUrlPattern = Pattern.compile("@(.*?):(.*?)/(.*?)[.]git");
         Matcher originRemoteMatcher = remoteUrlPattern.matcher(originRemote);
 
         if (originRemoteMatcher.find()) {
             String platform = originRemoteMatcher.group(1);
             String user = originRemoteMatcher.group(2);
+            String repo = originRemoteMatcher.group(3);
 
             if (platform.equals("bitbucket.org")) {
 
                 // Hyperlink Jira keys.
                 //
                 //   SSH remote origin URL:  git@bitbucket.org:<user>/<repo>.git
-                //   Jira key URL:           https://<user>.atlassian.net/browse/ABC-123
+                //   Jira key URL:           https://<user>.atlassian.net/browse/<jira-key>
+                //   <jira-key>:             Regex: [A-Z]+-\d+    E.g.: ABC-123
 
                 String nonHyperlinkedJiraKeyRegex = "([A-Z]+-\\d+)(?!.*\007)";
                 Pattern jiraKeyPattern = Pattern.compile(nonHyperlinkedJiraKeyRegex);
@@ -51,6 +53,24 @@ public class GitLogFormatter {
                     StringBuilder stringBuilder = new StringBuilder(output);
                     String hyperlink = buildHyperlink(String.format("https://%s.atlassian.net/browse/%s",
                             user, outputMatcher.group(1)), outputMatcher.group(1));
+                    stringBuilder.replace(outputMatcher.start(), outputMatcher.end(), hyperlink);
+                    output = stringBuilder.toString();
+                    outputMatcher = jiraKeyPattern.matcher(output);
+                }
+
+                // Hyperlink Bitbucket PR numbers.
+                //
+                // Bitbucket URL:  https://bitbucket.org/<user>/<repo>/pull-requests/<pr-number>
+                // <pr-number>:    Regex: #\d+    E.g.: #123
+
+                String nonHyperlinkedBbPrNumberRegex = "#(\\d+)(?!.*\\007)";
+                Pattern bbPrNumberPattern = Pattern.compile(nonHyperlinkedBbPrNumberRegex);
+                outputMatcher = bbPrNumberPattern.matcher(output);
+
+                while (outputMatcher.find()) {
+                    StringBuilder stringBuilder = new StringBuilder(output);
+                    String hyperlink = buildHyperlink(String.format("https://bitbucket.org/%s/%s/pull-requests/%s",
+                            user, repo, outputMatcher.group(1)), "#" + outputMatcher.group(1));
                     stringBuilder.replace(outputMatcher.start(), outputMatcher.end(), hyperlink);
                     output = stringBuilder.toString();
                     outputMatcher = jiraKeyPattern.matcher(output);

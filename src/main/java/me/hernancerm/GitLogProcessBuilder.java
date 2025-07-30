@@ -2,9 +2,13 @@ package me.hernancerm;
 
 import static org.fusesource.jansi.Ansi.ansi;
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -13,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import org.fusesource.jansi.AnsiConsole;
+import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiMode;
 import org.fusesource.jansi.AnsiPrintStream;
 
@@ -40,15 +44,24 @@ public class GitLogProcessBuilder {
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         Process process = processBuilder.start();
 
+        // TODO: Support ${PAGER} env var.
+        ProcessBuilder pagerProcessBuilder = new ProcessBuilder("less", "-RXF");
+        // Print stderr to the tty.
+        pagerProcessBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+        // Print stdout to the tty.
+        pagerProcessBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+        Process lessProcess = pagerProcessBuilder.start();
+
+        // TODO: Support new option `--no-pager`.
+        PrintStream writer = new PrintStream(new BufferedOutputStream(lessProcess.getOutputStream()));
+
         // Stdout.
         try (
-                AnsiPrintStream ansiPrintStream = AnsiConsole.out();
                 var inputStreamReader = new InputStreamReader(process.getInputStream());
                 var bufferedReader = new BufferedReader(inputStreamReader)
         ) {
             String line;
             GitCommit commit = new GitCommit();
-            setColorMode(ansiPrintStream, args);
             Pattern pattern = Pattern.compile(REGEX_TAG);
             String remoteOriginUrl = getRemoteOriginUrl();
             while ((line = bufferedReader.readLine()) != null) {
@@ -62,16 +75,21 @@ public class GitLogProcessBuilder {
                     commit.setRemoteOriginUrl(remoteOriginUrl);
                     // Substring is needed to account for the prefixes of the git-log option `--graph`.
                     // Example prefixes in this case: `* <commit>`, `| * <commit>`.
-                    ansiPrintStream.println(ansi().render(
+                    writer.println(ansi().render(
                             line.substring(0, startIndex) + commitFormatter.apply(commit)));
                     commit.reset();
                 } else {
                     // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
                     // just connectors, like `|\` or `|\|`.
-                    ansiPrintStream.println(ansi().render(line));
+                    writer.println(ansi().render(line));
                 }
             }
         }
+
+        // Close the writer to signal EOF to the pager (less). Starts interactive mode.
+        writer.close();
+        // Wait indefinitely for the pager (less) to finish (interactive mode).
+        lessProcess.waitFor();
 
         process.waitFor(500, TimeUnit.MILLISECONDS);
         return process.exitValue();
@@ -97,22 +115,6 @@ public class GitLogProcessBuilder {
             throw new RuntimeException(
                     "Error reading remote url for: origin",
                     e);
-        }
-    }
-
-    private void setColorMode(AnsiPrintStream ansiPrintStream, String[] args) {
-        for (String arg : args) {
-            switch (arg) {
-                case "--color=always":
-                    ansiPrintStream.setMode(AnsiMode.Force);
-                    break;
-                case "--color=never":
-                    ansiPrintStream.setMode(AnsiMode.Strip);
-                    break;
-                case "--color=auto":
-                    ansiPrintStream.setMode(AnsiMode.Default);
-                    break;
-            }
         }
     }
 

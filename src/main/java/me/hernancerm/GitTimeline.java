@@ -2,6 +2,8 @@ package me.hernancerm;
 
 import java.util.concurrent.Callable;
 
+import org.fusesource.jansi.Ansi;
+
 import picocli.CommandLine.Command;
 
 @Command(name = "git-timeline",
@@ -26,6 +28,20 @@ public class GitTimeline implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
+        setAnsiEnabled(args);
         return gitLogProcessBuilder.start(args, gitLogFormatter::format);
+    }
+
+    private void setAnsiEnabled(String[] args) {
+        for (String arg : args) {
+            switch (arg) {
+                case "--color=always":
+                    Ansi.setEnabled(true);
+                    break;
+                case "--color=never":
+                    Ansi.setEnabled(false);
+                    break;
+            }
+        }
     }
 }

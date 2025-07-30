@@ -9,6 +9,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,7 +35,7 @@ public class GitLogFormatter {
     }
 
     private String hyperlinkSubjectLine(String originRemote, String subjectLine) {
-        String hyperlinkedSubjectLine = subjectLine;
+        String hyperlinkedSubjectLine = "";
 
         Pattern remoteUrlPattern = Pattern.compile("@(.*?):(.*?)/");
         Matcher remoteUrlMatcher = remoteUrlPattern.matcher(originRemote);
@@ -50,23 +51,37 @@ public class GitLogFormatter {
                 //   SSH remote origin URL:  git@bitbucket.org:<user>/<repo>.git
                 //   Jira key URL:           https://<user>.atlassian.net/browse/ABC-123
 
-                String jiraKeyRegex = "[A-Z]+-\\d+";
-                Pattern jiraKeyPattern = Pattern.compile(jiraKeyRegex);
+                String nonHyperlinkedJiraKeyRegex = "([A-Z]+-\\d+)(?!.*\007)";
+                Pattern jiraKeyPattern = Pattern.compile(nonHyperlinkedJiraKeyRegex);
                 Matcher jiraKeyMatcher = jiraKeyPattern.matcher(subjectLine);
 
                 Deque<String> hyperlinks = new ArrayDeque<>();
                 while (jiraKeyMatcher.find()) {
-                    hyperlinks.offerLast(
-                            buildHyperlink(
-                                    "https://" + user + ".atlassian.net/browse/" + jiraKeyMatcher.group(0),
-                                    jiraKeyMatcher.group(0)));
+                    hyperlinks.offerLast(buildHyperlink(
+                            "https://" + user + ".atlassian.net/browse/" + jiraKeyMatcher.group(1),
+                            jiraKeyMatcher.group(1)));
                 }
 
-                jiraKeyMatcher.reset();
-                while (jiraKeyMatcher.find() && !hyperlinks.isEmpty()) {
-                    hyperlinkedSubjectLine = subjectLine.replaceFirst(jiraKeyRegex, hyperlinks.pollFirst());
+                if (!hyperlinks.isEmpty()) {
+                    hyperlinkedSubjectLine = subjectLine;
+                    int totalHyperlinks = hyperlinks.size();
+                    for (int i = 0; i < totalHyperlinks; i++) {
+                        jiraKeyMatcher = jiraKeyPattern.matcher(hyperlinkedSubjectLine);
+                        if (jiraKeyMatcher.find()) {
+                            StringBuilder stringBuilder = new StringBuilder(hyperlinkedSubjectLine);
+                            stringBuilder.replace(jiraKeyMatcher.start(), jiraKeyMatcher.end(),
+                                    Objects.requireNonNull(hyperlinks.pollFirst()));
+                            hyperlinkedSubjectLine = stringBuilder.toString();
+                        }
+                    }
+                } else {
+                    hyperlinkedSubjectLine = subjectLine;
                 }
             }
+        }
+
+        if (hyperlinkedSubjectLine.isEmpty()) {
+            hyperlinkedSubjectLine = subjectLine;
         }
 
         return hyperlinkedSubjectLine;

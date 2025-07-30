@@ -58,8 +58,10 @@ public class GitLogFormatter {
 
         while (matcher.find()) {
             StringBuilder stringBuilder = new StringBuilder(output);
-            String hyperlink = buildHyperlink(String.format("https://%s.atlassian.net/browse/%s",
-                    bitbucketUser, matcher.group(1)), matcher.group(1));
+            String hyperlink = AnsiUtils.buildHyperlink(String.format(
+                    "https://%s.atlassian.net/browse/%s",
+                    bitbucketUser, matcher.group(1)),
+                    matcher.group(1));
             stringBuilder.replace(matcher.start(), matcher.end(), hyperlink);
             output = stringBuilder.toString();
             matcher = pattern.matcher(output);
@@ -80,22 +82,15 @@ public class GitLogFormatter {
 
         while (matcher.find()) {
             StringBuilder stringBuilder = new StringBuilder(output);
-            String hyperlink = buildHyperlink(String.format("https://bitbucket.org/%s/%s/pull-requests/%s",
-                    bitbucketUser, repository, matcher.group(1)), "#" + matcher.group(1));
+            String hyperlink = AnsiUtils.buildHyperlink(String.format(
+                    "https://bitbucket.org/%s/%s/pull-requests/%s",
+                    bitbucketUser, repository, matcher.group(1)),
+                    "#" + matcher.group(1));
             stringBuilder.replace(matcher.start(), matcher.end(), hyperlink);
             output = stringBuilder.toString();
             matcher = pattern.matcher(output);
         }
 
         return output;
-    }
-
-    private String buildHyperlink(String url, String title) {
-        // https://unix.stackexchange.com/a/437585
-        // To get the octal escape sequences for '\e', '\a', etc., do this:
-        // 1. $ echo -n '\e' > _.txt
-        // 2. $ nvim _.txt
-        // 3. ga
-        return "\033]8;;" + url + "\007" + title + "\033]8;;\007";
     }
 }

@@ -6,9 +6,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -16,10 +14,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
-import org.fusesource.jansi.Ansi;
-import org.fusesource.jansi.AnsiMode;
-import org.fusesource.jansi.AnsiPrintStream;
 
 public class GitLogProcessBuilder {
 
@@ -63,7 +57,7 @@ public class GitLogProcessBuilder {
             String line;
             GitCommit commit = new GitCommit();
             Pattern pattern = Pattern.compile(REGEX_TAG);
-            String remoteOriginUrl = getRemoteOriginUrl();
+            GitRemote gitRemote = getGitRemote();
             while ((line = bufferedReader.readLine()) != null) {
                 int startIndex;
                 Matcher matcher = pattern.matcher(line);
@@ -72,7 +66,7 @@ public class GitLogProcessBuilder {
                     do {
                         populateCommitAttribute(matcher.group(1), matcher.group(2), commit);
                     } while (matcher.find());
-                    commit.setRemoteOriginUrl(remoteOriginUrl);
+                    commit.setGitRemote(gitRemote);
                     // Substring is needed to account for the prefixes of the git-log option `--graph`.
                     // Example prefixes in this case: `* <commit>`, `| * <commit>`.
                     writer.println(ansi().render(
@@ -95,7 +89,8 @@ public class GitLogProcessBuilder {
         return process.exitValue();
     }
 
-    private String getRemoteOriginUrl() {
+    private GitRemote getGitRemote() {
+        GitRemote gitRemote = new GitRemote();
         Process process;
 
         try {
@@ -110,12 +105,44 @@ public class GitLogProcessBuilder {
                 var inputStreamReader = new InputStreamReader(process.getInputStream());
                 var bufferedReader = new BufferedReader(inputStreamReader)
         ) {
-            return bufferedReader.readLine();
+            Matcher matcher;
+            String originUrl = bufferedReader.readLine();
+            if (originUrl.matches("^https.*$")) {
+                // HTTPS.
+                // The regex syntax `(?:X)` where `X` is a pattern defines a non-capturing
+                // regex group: https://www.baeldung.com/java-regex-non-capturing-groups
+                Pattern pattern = Pattern.compile("https://(?:.*?@)?(.*?)/(.*?)/(.*?)[.]git");
+                matcher = pattern.matcher(originUrl);
+                if (!matcher.find()) {
+                    throw new IllegalStateException(
+                            "Error matching the remote HTTPS url to extract its parts: "
+                                    + originUrl);
+                }
+            } else if (originUrl.matches("^git@.*$")) {
+                // SSH.
+                Pattern pattern = Pattern.compile("git@(.*?):(.*?)/(.*?)[.]git");
+                matcher = pattern.matcher(originUrl);
+                if (!matcher.find()) {
+                    throw new IllegalStateException(
+                            "Error matching the remote SSH url to extract its parts: "
+                                    + originUrl);
+                }
+            } else {
+                // TODO: Work even when there is no supported remote or no remote at all.
+                throw new IllegalStateException(
+                        "Unsupported Git remote protocol. Must be one of: HTTPS, SSH");
+            }
+            gitRemote.setPlatform(GitRemote.Platform.toEnum(matcher.group(1)));
+            gitRemote.setRepositoryName(matcher.group(3));
+            gitRemote.setOwnerName(matcher.group(2));
+
         } catch (IOException e) {
             throw new RuntimeException(
                     "Error reading remote url for: origin",
                     e);
         }
+
+        return gitRemote;
     }
 
     private void populateCommitAttribute(

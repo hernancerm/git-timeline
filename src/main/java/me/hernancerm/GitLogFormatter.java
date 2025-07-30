@@ -22,33 +22,29 @@ public class GitLogFormatter {
                                 + commit.getAuthorName()
                                 + "|@ "
                         + commit.getRefNamesColored()
-                        + " " + hyperlinkSubjectLine(commit.getRemoteOriginUrl(), commit.getSubjectLine()))
+                        + " " + hyperlinkSubjectLine(commit.getGitRemote(), commit.getSubjectLine()))
                 .toString();
     }
 
-    private String hyperlinkSubjectLine(String originRemote, String subjectLine) {
+    private String hyperlinkSubjectLine(GitRemote gitRemote, String subjectLine) {
         String output = subjectLine;
 
-        Pattern remoteUrlPattern = Pattern.compile("@(.*?):(.*?)/(.*?)[.]git");
-        Matcher originRemoteMatcher = remoteUrlPattern.matcher(originRemote);
-
-        if (originRemoteMatcher.find()) {
-            String platform = originRemoteMatcher.group(1);
-            String user = originRemoteMatcher.group(2);
-            String repo = originRemoteMatcher.group(3);
-
-            if (platform.equals("bitbucket.org")) {
-                output = hyperlinkSubjectLineJiraIssues(user, output);
-                output = hyperlinkSubjectLineBitbucketPrNumbers(user, repo, output);
-            }
+        if (GitRemote.Platform.BITBUCKET_ORG.equals(gitRemote.getPlatform())) {
+            output = hyperlinkSubjectLineJiraIssues(
+                    gitRemote.getOwnerName(), output);
+            output = hyperlinkSubjectLineBitbucketPrNumbers(
+                    gitRemote.getOwnerName(), gitRemote.getRepositoryName(), output);
+        } else if (GitRemote.Platform.GITHUB_COM.equals(gitRemote.getPlatform())) {
+            output = hyperlinkSubjectLineGitHubIssuesAndPrNumbers(
+                    gitRemote.getOwnerName(), gitRemote.getRepositoryName(), output);
         }
 
         return output;
     }
 
-    private String hyperlinkSubjectLineJiraIssues(String bitbucketUser, String subjectLine) {
+    private String hyperlinkSubjectLineJiraIssues(String bitbucketOwner, String subjectLine) {
 
-        //   Jira URL:               https://<user>.atlassian.net/browse/<jira-key>
+        //   Jira URL:               https://<owner>.atlassian.net/browse/<jira-key>
         //   <jira-key>:             Regex: [A-Z]+-\d+    E.g.: ABC-123
 
         String output = subjectLine;
@@ -60,7 +56,7 @@ public class GitLogFormatter {
             StringBuilder stringBuilder = new StringBuilder(output);
             String hyperlink = AnsiUtils.buildHyperlink(String.format(
                     "https://%s.atlassian.net/browse/%s",
-                    bitbucketUser, matcher.group(1)),
+                    bitbucketOwner, matcher.group(1)),
                     matcher.group(1));
             stringBuilder.replace(matcher.start(), matcher.end(), hyperlink);
             output = stringBuilder.toString();
@@ -70,9 +66,13 @@ public class GitLogFormatter {
         return output;
     }
 
-    private String hyperlinkSubjectLineBitbucketPrNumbers(String bitbucketUser, String repository, String subjectLine) {
+    private String hyperlinkSubjectLineBitbucketPrNumbers(
+            String bitbucketOwner,
+            String bitbucketRepository,
+            String subjectLine
+    ) {
 
-        // Bitbucket URL:  https://bitbucket.org/<user>/<repo>/pull-requests/<pr-number>
+        // Bitbucket URL:  https://bitbucket.org/<owner>/<repo>/pull-requests/<pr-number>
         // <pr-number>:    Regex: #\d+    E.g.: #123
 
         String output = subjectLine;
@@ -84,7 +84,38 @@ public class GitLogFormatter {
             StringBuilder stringBuilder = new StringBuilder(output);
             String hyperlink = AnsiUtils.buildHyperlink(String.format(
                     "https://bitbucket.org/%s/%s/pull-requests/%s",
-                    bitbucketUser, repository, matcher.group(1)),
+                    bitbucketOwner, bitbucketRepository, matcher.group(1)),
+                    "#" + matcher.group(1));
+            stringBuilder.replace(matcher.start(), matcher.end(), hyperlink);
+            output = stringBuilder.toString();
+            matcher = pattern.matcher(output);
+        }
+
+        return output;
+    }
+
+    private String hyperlinkSubjectLineGitHubIssuesAndPrNumbers(
+            String gitHubOwner,
+            String gitHubRepository,
+            String subjectLine
+    ) {
+
+        // How this method links both issues and PR numbers?:
+        // A GitHub issue URL redirects to a PR if the id matches a PR instead of an issue.
+
+        // GitHub URL:      https://github.com/<owner>/<repo>/issues/<issue-number>
+        // <issue-number>:  Regex: #\d+    E.g.: #123
+
+        String output = subjectLine;
+        String nonHyperlinkedGitHubIssueNumberRegex = "#(\\d+)(?!.*\\007)";
+        Pattern pattern = Pattern.compile(nonHyperlinkedGitHubIssueNumberRegex);
+        Matcher matcher = pattern.matcher(output);
+
+        while (matcher.find()) {
+            StringBuilder stringBuilder = new StringBuilder(output);
+            String hyperlink = AnsiUtils.buildHyperlink(String.format(
+                            "https://github.com/%s/%s/issues/%s",
+                            gitHubOwner, gitHubRepository, matcher.group(1)),
                     "#" + matcher.group(1));
             stringBuilder.replace(matcher.start(), matcher.end(), hyperlink);
             output = stringBuilder.toString();

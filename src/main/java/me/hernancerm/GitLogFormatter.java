@@ -1,5 +1,7 @@
 package me.hernancerm;
 
+import static me.hernancerm.GitRemote.Platform.BITBUCKET_ORG;
+import static me.hernancerm.GitRemote.Platform.GITHUB_COM;
 import static org.fusesource.jansi.Ansi.ansi;
 
 import java.util.regex.Matcher;
@@ -20,24 +22,25 @@ public class GitLogFormatter {
                         + (authorDiffersFromCommitter ? "@|bold,cyan " : "@|italic,cyan ")
                                 + c.getAuthorName()
                                 + "|@ "
-                        + c.getRefNamesColored()
+                        + ((c.getRemote() != null && BITBUCKET_ORG.equals(c.getRemote().getPlatform())
+                                ? hyperlinkSubjectLineJiraIssues(c.getRemote().getOwnerName(), c.getRefNamesColored())
+                                : c.getRefNamesColored()))
                         + " "
-                        + (
-                            c.getGitRemote() != null
-                                    ? hyperlinkSubjectLine(c.getGitRemote(), c.getSubjectLine())
-                                    : c.getSubjectLine()
+                        + (c.getRemote() != null
+                                ? hyperlinkSubjectLine(c.getRemote(), c.getSubjectLine())
+                                : c.getSubjectLine()
                         )).toString();
     }
 
     private String hyperlinkSubjectLine(GitRemote gitRemote, String subjectLine) {
         String output = subjectLine;
 
-        if (GitRemote.Platform.BITBUCKET_ORG.equals(gitRemote.getPlatform())) {
+        if (BITBUCKET_ORG.equals(gitRemote.getPlatform())) {
             output = hyperlinkSubjectLineJiraIssues(
                     gitRemote.getOwnerName(), output);
             output = hyperlinkSubjectLineBitbucketPrNumbers(
                     gitRemote.getOwnerName(), gitRemote.getRepositoryName(), output);
-        } else if (GitRemote.Platform.GITHUB_COM.equals(gitRemote.getPlatform())) {
+        } else if (GITHUB_COM.equals(gitRemote.getPlatform())) {
             output = hyperlinkSubjectLineGitHubIssuesAndPrNumbers(
                     gitRemote.getOwnerName(), gitRemote.getRepositoryName(), output);
         }

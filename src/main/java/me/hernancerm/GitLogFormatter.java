@@ -2,14 +2,6 @@ package me.hernancerm;
 
 import static org.fusesource.jansi.Ansi.ansi;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Deque;
-import java.util.List;
-import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,14 +27,14 @@ public class GitLogFormatter {
     }
 
     private String hyperlinkSubjectLine(String originRemote, String subjectLine) {
-        String hyperlinkedSubjectLine = "";
+        String output = subjectLine;
 
         Pattern remoteUrlPattern = Pattern.compile("@(.*?):(.*?)/");
-        Matcher remoteUrlMatcher = remoteUrlPattern.matcher(originRemote);
+        Matcher originRemoteMatcher = remoteUrlPattern.matcher(originRemote);
 
-        if (remoteUrlMatcher.find()) {
-            String platform = remoteUrlMatcher.group(1);
-            String user = remoteUrlMatcher.group(2);
+        if (originRemoteMatcher.find()) {
+            String platform = originRemoteMatcher.group(1);
+            String user = originRemoteMatcher.group(2);
 
             if (platform.equals("bitbucket.org")) {
 
@@ -53,38 +45,20 @@ public class GitLogFormatter {
 
                 String nonHyperlinkedJiraKeyRegex = "([A-Z]+-\\d+)(?!.*\007)";
                 Pattern jiraKeyPattern = Pattern.compile(nonHyperlinkedJiraKeyRegex);
-                Matcher jiraKeyMatcher = jiraKeyPattern.matcher(subjectLine);
+                Matcher outputMatcher = jiraKeyPattern.matcher(output);
 
-                Deque<String> hyperlinks = new ArrayDeque<>();
-                while (jiraKeyMatcher.find()) {
-                    hyperlinks.offerLast(buildHyperlink(
-                            "https://" + user + ".atlassian.net/browse/" + jiraKeyMatcher.group(1),
-                            jiraKeyMatcher.group(1)));
-                }
-
-                if (!hyperlinks.isEmpty()) {
-                    hyperlinkedSubjectLine = subjectLine;
-                    int totalHyperlinks = hyperlinks.size();
-                    for (int i = 0; i < totalHyperlinks; i++) {
-                        jiraKeyMatcher = jiraKeyPattern.matcher(hyperlinkedSubjectLine);
-                        if (jiraKeyMatcher.find()) {
-                            StringBuilder stringBuilder = new StringBuilder(hyperlinkedSubjectLine);
-                            stringBuilder.replace(jiraKeyMatcher.start(), jiraKeyMatcher.end(),
-                                    Objects.requireNonNull(hyperlinks.pollFirst()));
-                            hyperlinkedSubjectLine = stringBuilder.toString();
-                        }
-                    }
-                } else {
-                    hyperlinkedSubjectLine = subjectLine;
+                while (outputMatcher.find()) {
+                    StringBuilder stringBuilder = new StringBuilder(output);
+                    String hyperlink = buildHyperlink(String.format("https://%s.atlassian.net/browse/%s",
+                            user, outputMatcher.group(1)), outputMatcher.group(1));
+                    stringBuilder.replace(outputMatcher.start(), outputMatcher.end(), hyperlink);
+                    output = stringBuilder.toString();
+                    outputMatcher = jiraKeyPattern.matcher(output);
                 }
             }
         }
 
-        if (hyperlinkedSubjectLine.isEmpty()) {
-            hyperlinkedSubjectLine = subjectLine;
-        }
-
-        return hyperlinkedSubjectLine;
+        return output;
     }
 
     private String buildHyperlink(String url, String title) {

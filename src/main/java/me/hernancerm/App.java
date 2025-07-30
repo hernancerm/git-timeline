@@ -1,19 +1,10 @@
 package me.hernancerm;
 
-import java.io.IOException;
-
-import picocli.CommandLine;
-
 public class App {
 
-    public static void main(String[] args) throws IOException, InterruptedException {
-        CommandLine commandLine = new CommandLine(
-                new GitTimeline(
-                        args,
-                        new GitLogProcessBuilder(),
-                        new GitLogFormatter())
-        );
-        commandLine.setUnmatchedArgumentsAllowed(true);
-        System.exit(commandLine.execute(args));
+    public static void main(String[] args) throws Exception {
+        GitLogFormatter formatter = new GitLogFormatter();
+        GitLogProcessBuilder processBuilder = new GitLogProcessBuilder();
+        System.exit(new GitTimeline(args, processBuilder, formatter).call());
     }
 }

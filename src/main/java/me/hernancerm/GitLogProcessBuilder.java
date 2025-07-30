@@ -30,10 +30,10 @@ public class GitLogProcessBuilder {
     private static final String TAG_REGEX =
             "<hernancerm[.]git-timeline[.]([a-z-]+)>(.*?)</hernancerm[.]git-timeline[.]\\1>";
 
-    public int start(String[] args, Function<GitCommit, String> commitFormatter)
+    public int start(GitLogArgs args, Function<GitCommit, String> commitFormatter)
             throws IOException, InterruptedException {
 
-        ProcessBuilder processBuilder = new ProcessBuilder(getGitLogCommand(args));
+        ProcessBuilder processBuilder = new ProcessBuilder(getGitLogCommand(args.getUnparsedArgs()));
         // Print stderr to the tty.
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         Process process = processBuilder.start();
@@ -41,17 +41,21 @@ public class GitLogProcessBuilder {
         // TODO: Support ${PAGER} env var.
         //   https://commons.apache.org/proper/commons-text/apidocs/org/apache/commons/text/StringTokenizer.html
         //   https://docs.oracle.com/javase/8/docs/api/java/io/StreamTokenizer.html
-        ProcessBuilder pagerProcessBuilder = new ProcessBuilder("less", "-RXF");
-        // Print stderr to the tty.
-        pagerProcessBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
-        // Print stdout to the tty.
-        pagerProcessBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-        Process lessProcess = pagerProcessBuilder.start();
 
-        // TODO: Support new option `--no-pager`.
-        //   This is supported at the `git` command-level for `git-log`, but here I'm implementing
-        //   it at the `git-timeline` subcommand-level just for the ease of the implementation.
-        PrintStream writer = new PrintStream(new BufferedOutputStream(lessProcess.getOutputStream()));
+        Process pagerProcess;
+        PrintStream printStream;
+        if (args.isPagerEnabled()) {
+            ProcessBuilder pagerProcessBuilder = new ProcessBuilder("less", "-RXFM");
+            pagerProcessBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
+            pagerProcessBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
+
+            pagerProcess = pagerProcessBuilder.start();
+            // TODO: Flush at the end? Not sure why there is some delay for less to finish on big repos.
+            printStream = new PrintStream(new BufferedOutputStream(pagerProcess.getOutputStream()));
+        } else {
+            pagerProcess = null;
+            printStream = System.out;
+        }
 
         // Stdout.
         try (
@@ -73,21 +77,27 @@ public class GitLogProcessBuilder {
                     commit.setRemote(gitRemote);
                     // Substring is needed to account for the prefixes of the git-log option `--graph`.
                     // Example prefixes in this case: `* <commit>`, `| * <commit>`.
-                    writer.println(ansi().render(
+                    printStream.println(ansi().render(
                             line.substring(0, startIndex) + commitFormatter.apply(commit)));
                     commit.reset();
                 } else {
                     // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
                     // just connectors, like `|\` or `|\|`.
-                    writer.println(ansi().render(line));
+                    printStream.println(ansi().render(line));
                 }
             }
         }
 
-        // Close the writer to signal EOF to the pager (less). Starts interactive mode.
-        writer.close();
-        // Wait indefinitely for the pager (less) to finish (interactive mode).
-        lessProcess.waitFor();
+        if (args.isPagerEnabled()) {
+            // Close the writer to signal EOF to the pager (less). Starts interactive mode.
+            printStream.close();
+            if (pagerProcess == null) {
+                throw new IllegalStateException(
+                        "The pager process must not be null when the pager is enabled");
+            }
+            // Wait indefinitely for the pager (less) to finish (interactive mode).
+            pagerProcess.waitFor();
+        }
 
         process.waitFor(500, TimeUnit.MILLISECONDS);
         return process.exitValue();

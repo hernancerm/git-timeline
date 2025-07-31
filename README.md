@@ -22,7 +22,8 @@ git-timeline is a small wrapper for git-log which improves readability.
 
 > [!NOTE]
 > Currently, only macOS ARM64 is supported through Homebrew. Windows is not yet supported.
-> For Linux either build yourself the native image or use the uberjar from the releases page.
+> For macOS x86 and Linux either build yourself the native image or use the uberjar from
+> the releases page.
 
 1. Add the Homebrew tap:
 

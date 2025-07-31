@@ -45,11 +45,11 @@ public class GitTimeline implements Callable<Integer> {
                     break;
                 case "--color=always":
                     unparsedArgs.add(arg);
-                    Ansi.setEnabled(true);
+                    setAnsiEnabled(true);
                     break;
                 case "--color=never":
                     unparsedArgs.add(arg);
-                    Ansi.setEnabled(false);
+                    setAnsiEnabled(false);
                     break;
                 case "--no-pager":
                 case "-P":
@@ -68,6 +68,11 @@ public class GitTimeline implements Callable<Integer> {
         }
         output.setUnparsedArgs(unparsedArgs.toArray(new String[0]));
         return output;
+    }
+
+    private void setAnsiEnabled(boolean enabled) {
+        Ansi.setEnabled(enabled);
+        AnsiUtils.setEnabled(enabled);
     }
 
     private void handleHelpOption() {

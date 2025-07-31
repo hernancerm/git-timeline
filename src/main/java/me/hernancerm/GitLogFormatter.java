@@ -15,10 +15,11 @@ public class GitLogFormatter {
         return ansi().render(
                         (isMergeCommit ? "@|bold,yellow " : "@|italic,yellow ")
                                 + c.getAbbreviatedHash()
+                                + (isMergeCommit ? " M" : "  ")
                                 + "|@ "
                         + "@|italic,green "
                                 + c.getAuthorDate()
-                                + "|@ "
+                                + "|@  "
                         + (authorDiffersFromCommitter ? "@|bold,cyan " : "@|italic,cyan ")
                                 + c.getAuthorName()
                                 + "|@ "

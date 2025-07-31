@@ -38,14 +38,10 @@ public class GitLogProcessBuilder {
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         Process process = processBuilder.start();
 
-        // TODO: Support ${PAGER} env var.
-        //   https://commons.apache.org/proper/commons-text/apidocs/org/apache/commons/text/StringTokenizer.html
-        //   https://docs.oracle.com/javase/8/docs/api/java/io/StreamTokenizer.html
-
         Process pagerProcess;
         PrintWriter pagerWriter;
         if (args.isPagerEnabled()) {
-            ProcessBuilder pagerProcessBuilder = new ProcessBuilder("less", "-RXFM");
+            ProcessBuilder pagerProcessBuilder = new ProcessBuilder(getPagerCommand());
             pagerProcessBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
             pagerProcessBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
@@ -64,8 +60,8 @@ public class GitLogProcessBuilder {
         ) {
             String line;
             GitCommit commit = new GitCommit();
-            Pattern pattern = Pattern.compile(TAG_REGEX);
             GitRemote gitRemote = getGitRemote();
+            Pattern pattern = Pattern.compile(TAG_REGEX);
             while ((line = bufferedReader.readLine()) != null) {
 
                 // Fixes delay after user quits pager (e.g., press 'q' in less) on big repos.
@@ -128,6 +124,22 @@ public class GitLogProcessBuilder {
         } else {
             System.out.println(line);
         }
+    }
+
+    private List<String> getPagerCommand() {
+        List<String> output;
+        String preferredGitPagerCommand = System.getenv("GIT_PAGER");
+        if (preferredGitPagerCommand == null) {
+            String preferredPagerCommand = System.getenv("PAGER");
+            if (preferredPagerCommand == null) {
+                output = List.of("less", "-RXFM");
+            } else {
+                output = ShellCommandParser.parse(preferredPagerCommand);
+            }
+        } else {
+            output = ShellCommandParser.parse(preferredGitPagerCommand);
+        }
+        return output;
     }
 
     private GitRemote getGitRemote() {

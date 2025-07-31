@@ -32,7 +32,7 @@ Steps to implement:
 - [x] Clickable text linking to a ticket in issue tracker.
 - [x] Clickable text linking to a pull-request in VCS host.
 - [ ] Configuration file: Date format, colors for items.
-- [ ] Paging works as expected.
+- [x] Paging works as expected.
 - [x] Works well on big repos.
 
 ## Constraints

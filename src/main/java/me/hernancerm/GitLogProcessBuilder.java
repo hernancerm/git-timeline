@@ -7,13 +7,17 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
+
+import org.fusesource.jansi.Ansi;
 
 public class GitLogProcessBuilder {
 
@@ -43,18 +47,18 @@ public class GitLogProcessBuilder {
         //   https://docs.oracle.com/javase/8/docs/api/java/io/StreamTokenizer.html
 
         Process pagerProcess;
-        PrintStream printStream;
+        PrintWriter pagerWriter;
         if (args.isPagerEnabled()) {
             ProcessBuilder pagerProcessBuilder = new ProcessBuilder("less", "-RXFM");
             pagerProcessBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
             pagerProcessBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
 
             pagerProcess = pagerProcessBuilder.start();
-            // TODO: Flush at the end? Not sure why there is some delay for less to finish on big repos.
-            printStream = new PrintStream(new BufferedOutputStream(pagerProcess.getOutputStream()));
+            pagerWriter = new PrintWriter(new BufferedOutputStream(
+                            pagerProcess.getOutputStream()), false);
         } else {
             pagerProcess = null;
-            printStream = System.out;
+            pagerWriter = null;
         }
 
         // Stdout.
@@ -77,30 +81,45 @@ public class GitLogProcessBuilder {
                     commit.setRemote(gitRemote);
                     // Substring is needed to account for the prefixes of the git-log option `--graph`.
                     // Example prefixes in this case: `* <commit>`, `| * <commit>`.
-                    printStream.println(ansi().render(
-                            line.substring(0, startIndex) + commitFormatter.apply(commit)));
+                    println(args, pagerWriter, ansi().render(
+                            line.substring(0, startIndex) + commitFormatter.apply(commit)).toString());
                     commit.reset();
                 } else {
                     // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
                     // just connectors, like `|\` or `|\|`.
-                    printStream.println(ansi().render(line));
+                    println(args, pagerWriter, ansi().render(line).toString());
                 }
             }
         }
 
         if (args.isPagerEnabled()) {
-            // Close the writer to signal EOF to the pager (less). Starts interactive mode.
-            printStream.close();
-            if (pagerProcess == null) {
+            if (pagerWriter == null) {
                 throw new IllegalStateException(
-                        "The pager process must not be null when the pager is enabled");
+                        "The pager writer must not be null when the pager is enabled");
             }
+            pagerWriter.flush();
+            // Close the writer to signal EOF to the pager (less). Starts interactive mode.
+            pagerWriter.close();
             // Wait indefinitely for the pager (less) to finish (interactive mode).
+            // TODO: Fix delay after exiting pager when a bunch of lines are written (i.e. big repo)
+            //       When limiting the log on a big repo, e.g. `git-timeline -100`, there is no issue.
             pagerProcess.waitFor();
         }
 
         process.waitFor(500, TimeUnit.MILLISECONDS);
         return process.exitValue();
+    }
+
+    private void println(GitLogArgs args, PrintWriter pagerWriter, String line) {
+        if (args.isPagerEnabled()) {
+            if (pagerWriter == null) {
+                throw new IllegalStateException(
+                        "The pager writer must not be null when the pager is enabled");
+            }
+            pagerWriter.println(line);
+        } else {
+            System.out.println(line);
+        }
     }
 
     private GitRemote getGitRemote() {

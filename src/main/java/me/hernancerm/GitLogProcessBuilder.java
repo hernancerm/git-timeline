@@ -42,6 +42,8 @@ public class GitLogProcessBuilder {
         //   https://commons.apache.org/proper/commons-text/apidocs/org/apache/commons/text/StringTokenizer.html
         //   https://docs.oracle.com/javase/8/docs/api/java/io/StreamTokenizer.html
 
+        // TODO: fix: Strip ANSI escape sequences for hyperlink when --color=never.
+
         Process pagerProcess;
         PrintWriter pagerWriter;
         if (args.isPagerEnabled()) {

@@ -68,7 +68,7 @@ public class GitLogProcessBuilder {
             GitRemote gitRemote = getGitRemote();
             while ((line = bufferedReader.readLine()) != null) {
 
-                // Check if pager process has terminated (user pressed 'q')
+                // Fixes delay after user quits pager (e.g., press 'q' in less) on big repos.
                 if (args.isPagerEnabled()) {
                     if (pagerProcess == null) {
                         throw new IllegalStateException(
@@ -91,21 +91,13 @@ public class GitLogProcessBuilder {
                     commit.setRemote(gitRemote);
                     // Substring is needed to account for the prefixes of the git-log option `--graph`.
                     // Example prefixes in this case: `* <commit>`, `| * <commit>`.
-                    if (printlnCheckError(args, pagerWriter, ansi().render(
-                            line.substring(0, startIndex) + commitFormatter.apply(commit)).toString())) {
-                        // Failed to write to pager (likely because it was closed), terminate git process
-                        process.destroy();
-                        break;
-                    }
+                    println(args, pagerWriter, ansi().render(
+                            line.substring(0, startIndex) + commitFormatter.apply(commit)).toString());
                     commit.reset();
                 } else {
                     // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
                     // just connectors, like `|\` or `|\|`.
-                    if (printlnCheckError(args, pagerWriter, ansi().render(line).toString())) {
-                        // Failed to write to pager (likely because it was closed), terminate git process
-                        process.destroy();
-                        break;
-                    }
+                    println(args, pagerWriter, ansi().render(line).toString());
                 }
             }
         }
@@ -125,24 +117,16 @@ public class GitLogProcessBuilder {
         return process.exitValue();
     }
 
-    /// Return whether there was an error writing to the pager process' stdin.
-    private boolean printlnCheckError(GitLogArgs args, PrintWriter pagerWriter, String line) {
+    private void println(GitLogArgs args, PrintWriter pagerWriter, String line) {
         if (args.isPagerEnabled()) {
             if (pagerWriter == null) {
                 throw new IllegalStateException(
                         "The pager writer must not be null when the pager is enabled");
             }
-            try {
-                pagerWriter.println(line);
-                pagerWriter.flush();
-                return false;
-            } catch (Exception e) {
-                // Writing to pager failed. The user likely closed the pager by hitting 'q'.
-                return true;
-            }
+            pagerWriter.println(line);
+            pagerWriter.flush();
         } else {
             System.out.println(line);
-            return false;
         }
     }
 

@@ -44,10 +44,13 @@ public class GitTimeline implements Callable<Integer> {
                     handleVersionOption();
                     break;
                 case "--color=always":
+                    // Consistent with: https://git-scm.com/docs/git-log
                     unparsedArgs.add(arg);
                     setAnsiEnabled(true);
                     break;
                 case "--color=never":
+                case "--no-color":
+                    // Consistent with: https://git-scm.com/docs/git-log
                     unparsedArgs.add(arg);
                     setAnsiEnabled(false);
                     break;
@@ -79,12 +82,18 @@ public class GitTimeline implements Callable<Integer> {
         System.out.println(NAME + " " + VERSION);
         System.out.println("""
                 A small wrapper for git-log which improves readability.
+
                     -h, --help
                         Display this help message. Since git-timeline is a wrapper around
                         git-log, all options supported by git-log are also supported by
                         git-timeline. See: git log --help
+
                     -v, --version
-                        Display the version of git-timeline.""");
+                        Display the version of git-timeline.
+
+                    -P, --no-pager
+                        Disable paging.
+                """);
         System.exit(0);
     }
 

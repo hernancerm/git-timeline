@@ -61,6 +61,6 @@ brew upgrade git-timeline
 
 ## Versioning
 
-- `x.y`
-  - An increment on `x` indicates a breaking change OR a new non-breaking feature or enhancement.
-  - An increment on `y` indicates a bug fix.
+- `x.y`. Here is what an increment on each part means:
+  - `x`: Only non-breaking changes, of any kind, are included in the release.
+  - `y`: At least one breaking change is included in the release.

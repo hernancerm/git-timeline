@@ -85,6 +85,7 @@ public class GitLogProcessBuilder {
                         populateCommitAttribute(matcher.group(1), matcher.group(2), commit);
                     } while (matcher.find());
                     commit.setRemote(gitRemote);
+                    commit.setArgs(args);
                     // Substring is needed to account for the prefixes of the git-log option `--graph`.
                     // Example prefixes in this case: `* <commit>`, `| * <commit>`.
                     println(args, pagerWriter, ansi().render(

@@ -6,4 +6,5 @@ import lombok.Data;
 public class GitLogArgs {
     private String[] unparsedArgs;
     private boolean isPagerEnabled = true;
+    private boolean isGraphEnabled;
 }

@@ -58,3 +58,9 @@ brew upgrade git-timeline
 - Date format: Use the option `--date` as defined in the
   [documentation of git-log](https://git-scm.com/docs/git-log#Documentation/git-log.txt---dateformat).
 - Pager command: Use the environment variable `GIT_PAGER` or `PAGER`.
+
+## Versioning
+
+- `x.y`
+  - An increment on `x` indicates a breaking change OR a new non-breaking feature or enhancement.
+  - An increment on `y` indicates a bug fix.

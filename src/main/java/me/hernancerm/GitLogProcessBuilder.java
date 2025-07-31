@@ -67,11 +67,18 @@ public class GitLogProcessBuilder {
             Pattern pattern = Pattern.compile(TAG_REGEX);
             GitRemote gitRemote = getGitRemote();
             while ((line = bufferedReader.readLine()) != null) {
+
                 // Check if pager process has terminated (user pressed 'q')
-                if (args.isPagerEnabled() && pagerProcess != null && !pagerProcess.isAlive()) {
-                    // Pager has terminated, kill the git log process immediately
-                    process.destroyForcibly();
-                    break;
+                if (args.isPagerEnabled()) {
+                    if (pagerProcess == null) {
+                        throw new IllegalStateException(
+                                "The pager process must not be null when the pager is enabled");
+                    }
+                    if (!pagerProcess.isAlive()) {
+                        // Pager has terminated, kill the git-log process.
+                        process.destroy();
+                        break;
+                    }
                 }
 
                 int startIndex;
@@ -84,19 +91,19 @@ public class GitLogProcessBuilder {
                     commit.setRemote(gitRemote);
                     // Substring is needed to account for the prefixes of the git-log option `--graph`.
                     // Example prefixes in this case: `* <commit>`, `| * <commit>`.
-                    if (!println(args, pagerWriter, ansi().render(
+                    if (printlnCheckError(args, pagerWriter, ansi().render(
                             line.substring(0, startIndex) + commitFormatter.apply(commit)).toString())) {
                         // Failed to write to pager (likely because it was closed), terminate git process
-                        process.destroyForcibly();
+                        process.destroy();
                         break;
                     }
                     commit.reset();
                 } else {
                     // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
                     // just connectors, like `|\` or `|\|`.
-                    if (!println(args, pagerWriter, ansi().render(line).toString())) {
+                    if (printlnCheckError(args, pagerWriter, ansi().render(line).toString())) {
                         // Failed to write to pager (likely because it was closed), terminate git process
-                        process.destroyForcibly();
+                        process.destroy();
                         break;
                     }
                 }
@@ -108,22 +115,18 @@ public class GitLogProcessBuilder {
                 throw new IllegalStateException(
                         "The pager writer must not be null when the pager is enabled");
             }
-            pagerWriter.flush();
             // Close the writer to signal EOF to the pager (less). Starts interactive mode.
             pagerWriter.close();
             // Wait for the pager (less) to finish (interactive mode).
             pagerProcess.waitFor();
         }
 
-        // Ensure git process is terminated
-        if (process.isAlive()) {
-            process.destroyForcibly();
-        }
         process.waitFor(500, TimeUnit.MILLISECONDS);
         return process.exitValue();
     }
 
-    private boolean println(GitLogArgs args, PrintWriter pagerWriter, String line) {
+    /// Return whether there was an error writing to the pager process' stdin.
+    private boolean printlnCheckError(GitLogArgs args, PrintWriter pagerWriter, String line) {
         if (args.isPagerEnabled()) {
             if (pagerWriter == null) {
                 throw new IllegalStateException(
@@ -131,15 +134,15 @@ public class GitLogProcessBuilder {
             }
             try {
                 pagerWriter.println(line);
-                // Check if the writer encountered an error (e.g., broken pipe)
-                return !pagerWriter.checkError();
-            } catch (Exception e) {
-                // Writing failed, likely because pager was closed
+                pagerWriter.flush();
                 return false;
+            } catch (Exception e) {
+                // Writing to pager failed. The user likely closed the pager by hitting 'q'.
+                return true;
             }
         } else {
             System.out.println(line);
-            return true;
+            return false;
         }
     }
 

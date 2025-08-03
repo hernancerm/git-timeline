@@ -59,11 +59,6 @@ public class GitTimeline implements Callable<Integer> {
                     // Consistent with: https://git-scm.com/docs/git
                     output.setPagerEnabled(false);
                     break;
-                case "--paginate":
-                case "-p":
-                    // Consistent with: https://git-scm.com/docs/git
-                    output.setPagerEnabled(true);
-                    break;
                 case "--graph":
                     unparsedArgs.add(arg);
                     output.setGraphEnabled(true);

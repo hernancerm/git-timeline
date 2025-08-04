@@ -5,16 +5,14 @@ git-timeline is a small wrapper for git-log which improves readability.
 ## Features
 
 - One-line format.
-- Indication of merge commits.
-- Indication of commits with differing author and committer.
-- Accepts all options from git-log (including `--graph`).
-- Clickable text linking to a pull-request in VCS host.
-- Clickable text linking to a ticket in issue tracker.
-- Paging works as expected.
-- Works well on big repos.
+- Pass-through all options for git-log (except --help, -h, --version and -v).
+- Indication with bold of merge commits and commits with differing author and committer.
+- Pull request and issue tracker numbers can be formatted as terminal
+  [hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) to the hosting provider.
 
 ## Constraints
 
+- This in a commit subject line breaks the format: `</hernancerm.git-timeline.subject-line>`
 - Currently, no support for listing commits from a repo in a dir different from cwd.
 - Currently, should not work in Windows due to at least the pager.
 
@@ -62,7 +60,7 @@ brew upgrade git-timeline
 
 - Date format: Use the option `--date` as defined in the
   [documentation of git-log](https://git-scm.com/docs/git-log#Documentation/git-log.txt---dateformat).
-- Pager command: Use the environment variable `GIT_PAGER` or `PAGER`.
+- Pager command: Use the env var `GIT_PAGER`, `core.pager` from gitconfig or env var `PAGER`.
 
 ## Versioning
 

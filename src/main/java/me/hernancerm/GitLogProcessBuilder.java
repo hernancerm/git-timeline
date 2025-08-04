@@ -152,6 +152,10 @@ public class GitLogProcessBuilder {
     private String getGitCorePagerCommand() {
         Process process;
 
+        // In the case of 'delta', the pager configuration is retrieved from the
+        // file `.gitconfig` at user root from the section `[delta]`. No need to
+        // read default 'delta' opts here.
+
         try {
             process = new ProcessBuilder("git", "config", "get", "core.pager").start();
         } catch (IOException e) {

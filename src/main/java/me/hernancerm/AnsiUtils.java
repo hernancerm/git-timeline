@@ -37,7 +37,7 @@ public class AnsiUtils {
         }
 
         String output = line;
-        String nonHyperlinkedJiraIssueKeyRegex = "([A-Z]+-\\d+)(?!.*\007)";
+        String nonHyperlinkedJiraIssueKeyRegex = "([A-Z]+-\\d+)(?!.*\007|.*[.]\\d)";
         Pattern pattern = Pattern.compile(nonHyperlinkedJiraIssueKeyRegex);
         Matcher matcher = pattern.matcher(output);
 

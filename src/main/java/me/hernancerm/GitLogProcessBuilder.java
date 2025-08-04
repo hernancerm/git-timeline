@@ -302,7 +302,7 @@ public class GitLogProcessBuilder {
                         "log",
                         "--color=always",
                         "--date=format:%b/%d/%Y",
-                        "--pretty=" + prettyFormat),
+                        "--pretty=format:" + prettyFormat),
                 Arrays.stream(args)).toList();
     }
 }

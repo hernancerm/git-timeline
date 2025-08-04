@@ -127,20 +127,49 @@ public class GitLogProcessBuilder {
         }
     }
 
+    // Documentation for precedence of pager command source:
+    // https://git-scm.com/docs/git-var#Documentation/git-var.txt-GITPAGER
     private List<String> getPagerCommand() {
-        List<String> output;
-        String preferredGitPagerCommand = System.getenv("GIT_PAGER");
-        if (preferredGitPagerCommand == null) {
-            String preferredPagerCommand = System.getenv("PAGER");
-            if (preferredPagerCommand == null) {
-                output = List.of("less", "-RXFM");
-            } else {
-                output = ShellCommandParser.parse(preferredPagerCommand);
-            }
-        } else {
-            output = ShellCommandParser.parse(preferredGitPagerCommand);
+
+        String gitPagerCommand = System.getenv("GIT_PAGER");
+        if (gitPagerCommand != null && !gitPagerCommand.isEmpty()) {
+            return ShellCommandParser.parse(gitPagerCommand);
         }
-        return output;
+
+        String gitCorePagerCommand = getGitCorePagerCommand();
+        if (gitCorePagerCommand != null && !gitCorePagerCommand.isEmpty()) {
+            return ShellCommandParser.parse(gitCorePagerCommand);
+        }
+
+        String pagerCommand = System.getenv("PAGER");
+        if (pagerCommand != null && !pagerCommand.isEmpty()) {
+            return ShellCommandParser.parse(pagerCommand);
+        }
+
+        return List.of("less", "-RXFM");
+    }
+
+    private String getGitCorePagerCommand() {
+        Process process;
+
+        try {
+            process = new ProcessBuilder("git", "config", "get", "core.pager").start();
+        } catch (IOException e) {
+            throw new RuntimeException(
+                    "Error starting git process to get value 'core.pager'",
+                    e);
+        }
+
+        try (
+                var inputStreamReader = new InputStreamReader(process.getInputStream());
+                var bufferedReader = new BufferedReader(inputStreamReader)
+        ) {
+            return bufferedReader.readLine();
+        } catch (IOException e) {
+            throw new RuntimeException(
+                    "Error reading git config value 'core.pager'",
+                    e);
+        }
     }
 
     private GitRemote getGitRemote() {

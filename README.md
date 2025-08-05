@@ -1,10 +1,10 @@
 # git-timeline
 
-git-timeline is a small wrapper for git-log which improves readability.
+Timeline is a small git wrapper which improves the readability of git-log.
 
 ## Features
 
-- Indication with an asterisk of merge commits and commits with differing author and committer.
+- Indication of merge commits and commits with differing author and committer.
 - Pull request and issue tracker numbers are formatted as terminal
   [hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) to the hosting provider.
 - Pass-through of all opts/args to git-log (except --help, -h, --version and -v).
@@ -29,13 +29,19 @@ git-timeline is a small wrapper for git-log which improves readability.
 brew tap hernancerm/formulas https://github.com/hernancerm/formulas
 ```
 
-2. Install git-timeline:
+2. Install Timeline:
 
 ```text
 brew install git-timeline
 ```
 
-Optional: `~/.gitconfig`: Create an alias to type `git l` instead of `git timeline`:
+3. Verify installation by executing in a git repo:
+
+```
+git timeline
+```
+
+Optional: `~/.gitconfig`: Create the below alias to shorten `git timeline` to `git l`.
 
 ```text
 [alias]
@@ -44,13 +50,13 @@ Optional: `~/.gitconfig`: Create an alias to type `git l` instead of `git timeli
 
 ## Upgrade
 
-1. Fetch the newest version of all formulae.
+1. Fetch the newest version of all formulas.
 
 ```text
 brew update
 ```
 
-2. Upgrade git-timeline.
+2. Upgrade Timeline.
 
 ```text
 brew upgrade git-timeline

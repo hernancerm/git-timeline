@@ -4,7 +4,7 @@ git-timeline is a small wrapper for git-log which improves readability.
 
 ## Features
 
-- Indication with bold of merge commits and commits with differing author and committer.
+- Indication with an asterisk of merge commits and commits with differing author and committer.
 - Pull request and issue tracker numbers are formatted as terminal
   [hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) to the hosting provider.
 - Pass-through of all opts/args to git-log (except --help, -h, --version and -v).

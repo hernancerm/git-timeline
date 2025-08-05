@@ -13,15 +13,17 @@ public class GitLogFormatter {
         boolean isMergeCommit = c.getAbbreviatedParentHashes().length > 1;
         boolean authorDiffersFromCommitter = !c.getAuthorName().equals(c.getCommitterName());
         return ansi().render(
-                        (isMergeCommit ? "@|bold,yellow " : "@|italic,yellow ")
+                        (isMergeCommit ? "@|bold,yellow " : "@|yellow ")
                                 + c.getAbbreviatedHash()
-                                + "|@  "
-                        + "@|italic,green "
+                                + (isMergeCommit ? "*" : " ")
+                                + "|@ "
+                        + "@|green "
                                 + c.getAuthorDate()
                                 + "|@  "
-                        + (authorDiffersFromCommitter ? "@|bold,cyan " : "@|italic,cyan ")
+                        + (authorDiffersFromCommitter ? "@|bold,cyan " : "@|cyan ")
                                 + c.getAuthorName()
-                                + "|@ "
+                                + (authorDiffersFromCommitter ? "*" : " ")
+                                + "|@"
                         + ((c.getRemote() != null && BITBUCKET_ORG.equals(c.getRemote().getPlatform())
                                 ? AnsiUtils.hyperlinkJiraIssues(c.getRemote().getOwnerName(), c.getRefNamesColored())
                                 : c.getRefNamesColored()))

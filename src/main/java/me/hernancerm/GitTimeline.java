@@ -55,7 +55,6 @@ public class GitTimeline implements Callable<Integer> {
                     setAnsiEnabled(false);
                     break;
                 case "--no-pager":
-                case "-P":
                     // Consistent with: https://git-scm.com/docs/git
                     output.setPagerEnabled(false);
                     break;

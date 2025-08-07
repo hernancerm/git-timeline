@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class GitCommit {
 
+    private String fullHash;
     private String abbreviatedHash;
     private String[] abbreviatedParentHashes;
     private String authorName;
@@ -16,6 +17,7 @@ public class GitCommit {
     private GitLogArgs args;
 
     public void reset() {
+        fullHash = null;
         abbreviatedHash = null;
         abbreviatedParentHashes = null;
         authorName = null;

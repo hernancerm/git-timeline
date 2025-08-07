@@ -4,9 +4,6 @@ import static me.hernancerm.GitRemote.Platform.BITBUCKET_ORG;
 import static me.hernancerm.GitRemote.Platform.GITHUB_COM;
 import static org.fusesource.jansi.Ansi.ansi;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 public class GitLogFormatter {
 
     public String format(GitCommit c) {
@@ -14,7 +11,7 @@ public class GitLogFormatter {
         boolean authorDiffersFromCommitter = !c.getAuthorName().equals(c.getCommitterName());
         return ansi().render(
                         (isMergeCommit ? "@|bold,yellow " : "@|yellow ")
-                                + c.getAbbreviatedHash()
+                                + hyperlinkToCommit(c.getRemote(), c.getFullHash(), c.getAbbreviatedHash())
                                 + (isMergeCommit ? "*" : " ")
                                 + "|@ "
                         + "@|green "
@@ -32,6 +29,20 @@ public class GitLogFormatter {
                                 ? hyperlinkSubjectLine(c.getRemote(), c.getSubjectLine())
                                 : c.getSubjectLine()
                         )).toString();
+    }
+
+    private String hyperlinkToCommit(GitRemote r, String fullHash, String line) {
+        String output = line;
+
+        if (BITBUCKET_ORG.equals(r.getPlatform())) {
+            output = AnsiUtils.hyperlinkToBitbucketCommit(
+                    r.getOwnerName(), r.getRepositoryName(), fullHash, line);
+        } else if (GITHUB_COM.equals(r.getPlatform())) {
+            output = AnsiUtils.hyperlinkToGitHubCommit(
+                    r.getOwnerName(), r.getRepositoryName(), fullHash, line);
+        }
+
+        return output;
     }
 
     private String hyperlinkSubjectLine(GitRemote r, String subjectLine) {

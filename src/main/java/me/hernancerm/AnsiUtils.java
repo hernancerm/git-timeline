@@ -121,4 +121,36 @@ public class AnsiUtils {
 
         return output;
     }
+
+    public static String hyperlinkToGitHubCommit(
+            String gitHubOwner,
+            String gitHubRepository,
+            String fullHash,
+            String line) {
+
+        if (!enabled) {
+            return line;
+        }
+
+        return buildHyperlink(String.format(
+                "https://github.com/%s/%s/commit/%s",
+                        gitHubOwner, gitHubRepository, fullHash),
+                line);
+    }
+
+    public static String hyperlinkToBitbucketCommit(
+            String bitbucketOwner,
+            String bitbucketRepository,
+            String fullHash,
+            String line) {
+
+        if (!enabled) {
+            return line;
+        }
+
+        return buildHyperlink(String.format(
+                        "https://bitbucket.org/%s/%s/commits/%s",
+                        bitbucketOwner, bitbucketRepository, fullHash),
+                line);
+    }
 }

@@ -18,6 +18,7 @@ import java.util.stream.Stream;
 public class GitLogProcessBuilder {
 
     // Items.
+    private static final String FULL_HASH_ITEM = "full-hash";
     private static final String ABBREVIATED_HASH_ITEM = "abbreviated-hash";
     private static final String ABBREVIATED_PARENT_HASHES_ITEM = "abbreviated-parent-hashes";
     private static final String REF_NAMES_COLORED_ITEM = "ref-names-colored";
@@ -245,6 +246,9 @@ public class GitLogProcessBuilder {
             GitCommit commit
     ) {
         switch (serializedAttributeName) {
+            case FULL_HASH_ITEM:
+                commit.setFullHash(attributeValue);
+                break;
             case ABBREVIATED_HASH_ITEM:
                 commit.setAbbreviatedHash(attributeValue);
                 break;

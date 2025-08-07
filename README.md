@@ -10,11 +10,10 @@ Timeline is a small git wrapper which improves the readability of git-log.
 - Pass-through of all opts/args to git-log (except --help, -h, --version and -v).
 - One-line format.
 
-## Constraints
+## Limitations
 
 - This in a commit subject line breaks the format: `</hernancerm.git-timeline.subject-line>`
-- Currently, no support for listing commits from a repo in a dir different from cwd.
-- Currently, should not work in Windows due to at least the pager.
+- Not tested in any way in Windows.
 
 ## Installation
 

@@ -15,21 +15,18 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v5
 
-      - name: Install SDKMAN!
-        # https://www.graalvm.org/downloads
+      - name: Build binary
         run: |
+          # Install SDKMAN!
+          # https://www.graalvm.org/downloads
           curl -s "https://get.sdkman.io" | bash
           source "${HOME}/.sdkman/bin/sdkman-init.sh"
-
-      - name: Install Java 21 Graal
-        run: |
+          # Install Java 21 Graal
           sdk install java 21.0.8-graal
           echo "JAVA_HOME = ${JAVA_HOME}"
           export GRAALVM_HOME=${JAVA_HOME}
           java --version
-
-      - name: Build binary
-        run: |
+          # Build binary
           make bin
           ./target/git-timeline --no-pager --no-color -3
 

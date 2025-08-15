@@ -1,0 +1,38 @@
+name: Build binaries
+on:
+  workflow_dispatch:
+
+jobs:
+
+  macos-x86:
+    name: macos-x86
+    runs-on: macos-13
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v5
+
+      - name: Install SDKMAN!
+        # https://www.graalvm.org/downloads
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "${HOME}/.sdkman/bin/sdkman-init.sh"
+
+      - name: Install Java 21 Graal
+        run: |
+          sdk install java 21.0.8-graal
+          echo "JAVA_HOME = ${JAVA_HOME}"
+          export GRAALVM_HOME=${JAVA_HOME}
+          java --version
+
+      - name: Build binary
+        run: |
+          make bin
+          ./target/git-timeline --no-pager --no-color -3
+
+# ---
+# Full list of packages installed on ubuntu-latest:
+# <https://gist.github.com/stevecondylios/fc6fd259af75a2545bfece930e24f57f>.

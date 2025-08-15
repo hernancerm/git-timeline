@@ -23,9 +23,11 @@ jobs:
           source "${HOME}/.sdkman/bin/sdkman-init.sh"
           # Install Java 21 Graal
           sdk install java 21.0.8-graal
-          echo "JAVA_HOME = ${JAVA_HOME}"
-          export GRAALVM_HOME=${JAVA_HOME}
           java --version
+          export JAVA_HOME="${HOME}/.sdkman/candidates/java/current"
+          echo "JAVA_HOME=${JAVA_HOME}"
+          export GRAALVM_HOME="${JAVA_HOME}"
+          echo "GRAALVM_HOME=${GRAALVM_HOME}"
           # Build binary
           make bin
           ./target/git-timeline --no-pager --no-color -3

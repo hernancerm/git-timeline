@@ -7,6 +7,8 @@ jobs:
   macos-x86:
     name: macos-x86
     runs-on: macos-13
+    env:
+      ARCHIVE: git-timeline-macos-x86.tar.gz
     defaults:
       run:
         shell: bash
@@ -15,33 +17,33 @@ jobs:
       - name: Check out repo
         uses: actions/checkout@v5
 
+      - name: Install SDKMAN! and Java 21 Graal
+        run: |
+          curl -s "https://get.sdkman.io" | bash
+          source "${HOME}/.sdkman/bin/sdkman-init.sh"
+          sdk install java 21.0.8-graal
+          java --version
+
       - name: Build binary
+        env:
+          JAVA_HOME: ${{ env.HOME }}/.sdkman/candidates/java/current
+          GRAALVM_HOME: ${{ env.HOME }}/.sdkman/candidates/java/current
+        run: |
+          source "${HOME}/.sdkman/bin/sdkman-init.sh"
+          make bin
+
+      - name: Package binary
+        run: |
+          cp -v target/git-timeline .
+          tar czf ${ARCHIVE} git-timeline
+
+      - name: Install Wrangler
+        run: |
+          npm install -g wrangler@latest
+
+      - name: Upload binary
         env:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          # Install Wrangler
-          npm install -g wrangler@latest
-          wrangler --version
-
-          # Test file upload
-          echo hi > hi.txt
-          wrangler --version
-          wrangler r2 object put git-timeline-binaries/hi.txt --file hi.txt --remote
-
-          # # Install SDKMAN!
-          # curl -s "https://get.sdkman.io" | bash
-          # source "${HOME}/.sdkman/bin/sdkman-init.sh"
-          #
-          # # Install Java 21 Graal
-          # sdk install java 21.0.8-graal
-          # export JAVA_HOME="${HOME}/.sdkman/candidates/java/current"
-          # export GRAALVM_HOME="${JAVA_HOME}"
-          # java --version
-          #
-          # # Build binary
-          # make bin
-          #
-          # # Package binary
-          # cp -v target/git-timeline .
-          # tar czf git-timeline-macos-x86.tar.gz git-timeline
+          wrangler r2 object put git-timeline-binaries/${ARCHIVE} -f ${ARCHIVE} --remote

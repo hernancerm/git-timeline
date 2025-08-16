@@ -27,7 +27,7 @@ jobs:
           # Test file upload
           echo hi > hi.txt
           wrangler --version
-          wrangler r2 object put git-timeline-binaries/hi.txt
+          wrangler r2 object put git-timeline-binaries/hi.txt --file hi.txt --remote
 
           # # Install SDKMAN!
           # curl -s "https://get.sdkman.io" | bash

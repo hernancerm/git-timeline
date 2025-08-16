@@ -16,20 +16,32 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Build binary
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          # Install SDKMAN!
-          curl -s "https://get.sdkman.io" | bash
-          source "${HOME}/.sdkman/bin/sdkman-init.sh"
+          # Install Wrangler
+          npm install -g wrangler@latest
+          wrangler --version
 
-          # Install Java 21 Graal
-          sdk install java 21.0.8-graal
-          export JAVA_HOME="${HOME}/.sdkman/candidates/java/current"
-          export GRAALVM_HOME="${JAVA_HOME}"
-          java --version
+          # Test file upload
+          echo hi > hi.txt
+          wrangler --version
+          wrangler r2 object put git-timeline-binaries/hi.txt
 
-          # Build binary
-          make bin
-
-          # Package binary
-          cp -v target/git-timeline .
-          tar czf git-timeline-macos-x86.tar.gz git-timeline
+          # # Install SDKMAN!
+          # curl -s "https://get.sdkman.io" | bash
+          # source "${HOME}/.sdkman/bin/sdkman-init.sh"
+          #
+          # # Install Java 21 Graal
+          # sdk install java 21.0.8-graal
+          # export JAVA_HOME="${HOME}/.sdkman/candidates/java/current"
+          # export GRAALVM_HOME="${JAVA_HOME}"
+          # java --version
+          #
+          # # Build binary
+          # make bin
+          #
+          # # Package binary
+          # cp -v target/git-timeline .
+          # tar czf git-timeline-macos-x86.tar.gz git-timeline

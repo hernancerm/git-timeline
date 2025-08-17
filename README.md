@@ -8,7 +8,7 @@ Timeline is a small git wrapper which improves the readability of git-log.
 - Commit hashes, PR numbers and issue numbers are formatted as terminal
   [hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) to the hosting provider.
 - Pass-through of all opts/args to git-log (except --help, -h, --version and -v).
-- One-line format.
+- One-line format including date (%ad) and author (%an).
 
 ## Limitations
 
@@ -18,9 +18,8 @@ Timeline is a small git wrapper which improves the readability of git-log.
 ## Installation
 
 > [!NOTE]
-> Currently, only macOS ARM64 is supported through Homebrew. Windows is not yet supported.
-> For macOS x86 and Linux either build yourself the native image or use the uberjar from
-> the releases page.
+> Only macOS is supported through Homebrew. For Linux see the section below
+> [Build from source](#build-from-source).
 
 1. Add the Homebrew tap:
 
@@ -67,7 +66,41 @@ brew upgrade git-timeline
   [documentation of git-log](https://git-scm.com/docs/git-log#Documentation/git-log.txt---dateformat).
 - Pager command: Use the env var `GIT_PAGER`, `core.pager` from gitconfig or env var `PAGER`.
 
+## Build from source
+
+The project is written in Java 21.
+
+The steps below should work for macOS (arm64 and x86) and Linux (arm64 and x86).
+
+### Native binary
+
+GraalVM Native Image is used to compile Java to a native binary.
+
+1. Download the Java 21 JDK provided by GraalVM.
+
+    Either do it manually through the website: https://www.graalvm.org/downloads/
+
+    Or use SDKMAN! (https://sdkman.io/): `sdk install java 21.0.8-graal`
+
+2. Set the env vars `JAVA_HOME` and `GRAALVM_HOME` (same value as JAVA_HOME).
+
+3. On a clone of this repo run `make bin`.
+
+The binary is created at `./target/git-timeline`.
+
+### Uber JAR (JAR with dependencies)
+
+1. Download a Java 21 JDK.
+
+2. Set the env var `JAVA_HOME`.
+
+3. On a clone of this repo run `make uber`.
+
+The uber JAR is created at `./target/git-timeline.jar`.
+
 ## Versioning
+
+Timeline does not follow semantic versioning.
 
 - `x.y`. Here is what an increment on each part means:
   - `x`: At least one breaking change is included in the release.

@@ -2,13 +2,20 @@
 
 Timeline is a small git wrapper which improves the readability of git-log.
 
+## Usage
+
+Timeline is a **drop-in replacement** for `git log`. So `git timeline` accepts ANY option
+supported by git-log.
+
+Timeline has very few additional options. Learn them through `git timeline -h`.
+
 ## Features
 
-- Indication of merge commits and commits with differing author and committer.
 - Commit hashes, PR numbers and issue numbers are formatted as terminal
   [hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) to the hosting provider.
-- Pass-through of all opts/args to git-log (except --help, -h, --version and -v).
+- Indication of merge commits and commits with differing author and committer.
 - One-line format including date (%ad) and author (%an).
+- Pass-through of all opts/args to git-log.
 
 ## Limitations
 

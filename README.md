@@ -5,7 +5,7 @@ Timeline is a small git wrapper which improves the readability of git-log.
 ## Usage
 
 Timeline is a **drop-in replacement** for `git log`. So `git timeline` accepts ANY option
-supported by git-log.
+supported by [git-log](https://git-scm.com/docs/git-log).
 
 Timeline has very few additional options. Learn them through `git timeline -h`.
 

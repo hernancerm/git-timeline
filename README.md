@@ -95,7 +95,7 @@ GraalVM Native Image is used to compile Java to a native binary.
 
 The binary is created at `./target/git-timeline`.
 
-### Uber JAR (JAR with dependencies)
+### Uber JAR (executable JAR)
 
 1. Download a Java 21 JDK.
 
@@ -104,6 +104,8 @@ The binary is created at `./target/git-timeline`.
 3. On a clone of this repo run `make uber`.
 
 The uber JAR is created at `./target/git-timeline.jar`.
+
+Execute it with `java -jar ./target/git-timeline.jar`.
 
 ## Versioning
 

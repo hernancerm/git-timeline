@@ -2,9 +2,9 @@
 
 Timeline is a drop-in replacement for git-log which improves the readability of its output.
 
-| Example output of `git timeline`                                                                                                                                                                           | Hyperlinks feature                                                    |
-|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
-| An asterisk next to the hash means the commit is a merge; next to the author name means the author and committer have different names. <br><br> ![git-timeline demo image](./assets/git-timeline-demo.png) | ![git-timeline demo video](./assets/git-timeline-hyperlinks-demo.mp4) |
+| Example output: Commits from the <a href="https://github.com/neovim/neovim">Neovim</a> repository |
+|---------------------------------------------------------------------------------------------------|
+| <img src="./assets/git-timeline-demo.png">                                                        |
 
 ## Usage
 
@@ -17,7 +17,8 @@ Timeline has very few additional options. Learn them through `git timeline -h`.
 
 - Commit hashes, PR numbers and issue numbers are formatted as terminal
   [hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) to the hosting provider.
-- Indication of merge commits and commits with differing author and committer.
+- Indication of some commit characteristics: An asterisk next to the hash means the commit is a merge; next
+  to the author name means the author and committer have different names.
 - One-line format including date (%ad) and author (%an).
 - Pass-through of all opts/args to git-log.
 

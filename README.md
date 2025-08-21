@@ -1,6 +1,10 @@
 # git-timeline
 
-Timeline is a small git wrapper which improves the readability of git-log.
+Timeline is a drop-in replacement for git-log which improves the readability of its output.
+
+| Example output of `git timeline`                                                                                                                                                                           | Hyperlinks feature                                                    |
+|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| An asterisk next to the hash means the commit is a merge; next to the author name means the author and committer have different names. <br><br> ![git-timeline demo image](./assets/git-timeline-demo.png) | ![git-timeline demo video](./assets/git-timeline-hyperlinks-demo.mp4) |
 
 ## Usage
 

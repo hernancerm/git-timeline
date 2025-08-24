@@ -1,10 +1,8 @@
 # git-timeline
 
-Timeline is a drop-in replacement for git-log which improves the readability of its output.
+Timeline is a **drop-in replacement** for git-log which improves the readability of its output.
 
-| Example output: Commits from the <a href="https://github.com/neovim/neovim">Neovim</a> repository |
-|---------------------------------------------------------------------------------------------------|
-| <img src="./assets/git-timeline-demo.gif">                                                        |
+<img src="./assets/git-timeline-demo.gif">
 
 ## Usage
 

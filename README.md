@@ -2,7 +2,7 @@
 
 Timeline is a **drop-in replacement** for git-log which improves the readability of its output.
 
-<img src="./assets/git-timeline-demo.gif">
+<img src="./assets/git-timeline.png">
 
 ## Usage
 

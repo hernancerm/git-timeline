@@ -9,7 +9,7 @@ import org.fusesource.jansi.Ansi;
 public class GitTimeline implements Callable<Integer> {
 
     private static final String NAME = "git-timeline";
-    private static final String VERSION = "2.1-SNAPSHOT";
+    private static final String VERSION = "2.1";
 
     private final String[] args;
     private final GitLogProcessBuilder gitLogProcessBuilder;

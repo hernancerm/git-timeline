@@ -4,6 +4,8 @@ import static me.hernancerm.GitRemote.Platform.BITBUCKET_ORG;
 import static me.hernancerm.GitRemote.Platform.GITHUB_COM;
 import static org.fusesource.jansi.Ansi.ansi;
 
+import java.util.Objects;
+
 public class GitLogFormatter {
 
     public String format(GitCommit c) {
@@ -11,7 +13,9 @@ public class GitLogFormatter {
         boolean authorDiffersFromCommitter = !c.getAuthorName().equals(c.getCommitterName());
         return ansi().render(
                         (isMergeCommit ? "@|bold,yellow " : "@|yellow ")
-                                + hyperlinkToCommit(c.getRemote(), c.getFullHash(), c.getAbbreviatedHash())
+                                + (c.getRemote() != null
+                                        ? hyperlinkToCommit(c.getRemote(), c.getFullHash(), c.getAbbreviatedHash())
+                                        : c.getAbbreviatedHash())
                                 + (isMergeCommit ? "*" : " ")
                                 + "|@ "
                         + "@|green "
@@ -32,6 +36,10 @@ public class GitLogFormatter {
     }
 
     private String hyperlinkToCommit(GitRemote r, String fullHash, String line) {
+        Objects.requireNonNull(r, "Cannot hyperlink line when the remote is null");
+        Objects.requireNonNull(fullHash, "Cannot hyperlink line when the full hash is null");
+        Objects.requireNonNull(line, "Cannot hyperlink line when the line is null");
+
         String output = line;
 
         if (BITBUCKET_ORG.equals(r.getPlatform())) {
@@ -46,6 +54,9 @@ public class GitLogFormatter {
     }
 
     private String hyperlinkSubjectLine(GitRemote r, String subjectLine) {
+        Objects.requireNonNull(r, "Cannot hyperlink subject line when the remote is null");
+        Objects.requireNonNull(r, "Cannot hyperlink subject line when the subject line is null");
+
         String output = subjectLine;
 
         if (BITBUCKET_ORG.equals(r.getPlatform())) {

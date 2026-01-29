@@ -1,12 +1,9 @@
 package me.hernancerm;
 
-import lombok.Data;
-
-@Data
-public class GitRemote {
-    private Platform platform;
-    private String repositoryName;
-    private String ownerName;
+public record GitRemote(
+        Platform platform,
+        String repositoryName,
+        String ownerName) {
 
     public enum Platform {
         BITBUCKET_ORG,

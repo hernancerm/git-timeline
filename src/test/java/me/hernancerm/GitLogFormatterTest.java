@@ -40,10 +40,10 @@ class GitLogFormatterTest {
     }
 
     private GitCommit getCommit() {
-        GitRemote remote = new GitRemote();
-        remote.setPlatform(GitRemote.Platform.BITBUCKET_ORG);
-        remote.setRepositoryName("test-repo");
-        remote.setOwnerName("hernancerm");
+        GitRemote remote = new GitRemote(
+                GitRemote.Platform.BITBUCKET_ORG,
+                "test-repo",
+                "hernancerm");
 
         GitCommit commit = new GitCommit();
         commit.setFullHash("3bb28d0d0d1c978894e22c5206c0d1f07f5b9071");

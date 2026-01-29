@@ -25,8 +25,8 @@ public class GitLogFormatter {
                                 + c.getAuthorName()
                                 + (authorDiffersFromCommitter ? "*" : " ")
                                 + "|@"
-                        + ((c.getRemote() != null && BITBUCKET_ORG.equals(c.getRemote().getPlatform())
-                                ? AnsiUtils.hyperlinkJiraIssues(c.getRemote().getOwnerName(), c.getRefNamesColored())
+                        + ((c.getRemote() != null && BITBUCKET_ORG.equals(c.getRemote().platform())
+                                ? AnsiUtils.hyperlinkJiraIssues(c.getRemote().ownerName(), c.getRefNamesColored())
                                 : c.getRefNamesColored()))
                         + " "
                         + (c.getRemote() != null
@@ -42,12 +42,12 @@ public class GitLogFormatter {
 
         String output = line;
 
-        if (BITBUCKET_ORG.equals(r.getPlatform())) {
+        if (BITBUCKET_ORG.equals(r.platform())) {
             output = AnsiUtils.hyperlinkToBitbucketCommit(
-                    r.getOwnerName(), r.getRepositoryName(), fullHash, line);
-        } else if (GITHUB_COM.equals(r.getPlatform())) {
+                    r.ownerName(), r.repositoryName(), fullHash, line);
+        } else if (GITHUB_COM.equals(r.platform())) {
             output = AnsiUtils.hyperlinkToGitHubCommit(
-                    r.getOwnerName(), r.getRepositoryName(), fullHash, line);
+                    r.ownerName(), r.repositoryName(), fullHash, line);
         }
 
         return output;
@@ -59,14 +59,14 @@ public class GitLogFormatter {
 
         String output = subjectLine;
 
-        if (BITBUCKET_ORG.equals(r.getPlatform())) {
+        if (BITBUCKET_ORG.equals(r.platform())) {
             output = AnsiUtils.hyperlinkJiraIssues(
-                    r.getOwnerName(), output);
+                    r.ownerName(), output);
             output = AnsiUtils.hyperlinkBitbucketPrNumbers(
-                    r.getOwnerName(), r.getRepositoryName(), output);
-        } else if (GITHUB_COM.equals(r.getPlatform())) {
+                    r.ownerName(), r.repositoryName(), output);
+        } else if (GITHUB_COM.equals(r.platform())) {
             output = AnsiUtils.hyperlinkGitHubIssuesAndPrNumbers(
-                    r.getOwnerName(), r.getRepositoryName(), output);
+                    r.ownerName(), r.repositoryName(), output);
         }
 
         return output;

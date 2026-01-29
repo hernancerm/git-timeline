@@ -32,7 +32,8 @@ public class GitTimeline implements Callable<Integer> {
 
     private GitLogArgs parseArgs(String[] args) {
         List<String> unparsedArgs = new ArrayList<>();
-        GitLogArgs output = new GitLogArgs();
+        var isGraphEnabled = false;
+        var isPagerEnabled = true;
         for (String arg : args) {
             switch (arg) {
                 case "--help":
@@ -56,19 +57,21 @@ public class GitTimeline implements Callable<Integer> {
                     break;
                 case "--no-pager":
                     // Consistent with: https://git-scm.com/docs/git
-                    output.setPagerEnabled(false);
+                    isPagerEnabled = false;
                     break;
                 case "--graph":
                     unparsedArgs.add(arg);
-                    output.setGraphEnabled(true);
+                    isGraphEnabled = true;
                     break;
                 default:
                     unparsedArgs.add(arg);
                     break;
             }
         }
-        output.setUnparsedArgs(unparsedArgs.toArray(new String[0]));
-        return output;
+        return new GitLogArgs(
+                unparsedArgs.toArray(new String[0]),
+                isPagerEnabled,
+                isGraphEnabled);
     }
 
     private void setAnsiEnabled(boolean enabled) {

@@ -34,7 +34,7 @@ public class GitLogProcessBuilder {
     public int start(GitLogArgs args, Function<GitCommit, String> commitFormatter)
             throws IOException, InterruptedException {
 
-        ProcessBuilder processBuilder = new ProcessBuilder(getGitLogCommand(args.getUnparsedArgs()));
+        ProcessBuilder processBuilder = new ProcessBuilder(getGitLogCommand(args.unparsedArgs()));
         // Print stderr to the tty.
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         Process process = processBuilder.start();
@@ -226,10 +226,10 @@ public class GitLogProcessBuilder {
                 return null;
             }
 
-            gitRemote = new GitRemote();
-            gitRemote.setPlatform(GitRemote.Platform.toEnum(matcher.group(1)));
-            gitRemote.setRepositoryName(matcher.group(3));
-            gitRemote.setOwnerName(matcher.group(2));
+            gitRemote = new GitRemote(
+                    GitRemote.Platform.toEnum(matcher.group(1)),
+                    matcher.group(3),
+                    matcher.group(2));
 
         } catch (IOException e) {
             throw new RuntimeException(

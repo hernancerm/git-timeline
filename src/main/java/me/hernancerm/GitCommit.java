@@ -1,6 +1,7 @@
 package me.hernancerm;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 public class GitCommit {
 
@@ -108,79 +109,37 @@ public class GitCommit {
         this.args = args;
     }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((fullHash == null) ? 0 : fullHash.hashCode());
-		result = prime * result + ((abbreviatedHash == null) ? 0 : abbreviatedHash.hashCode());
-		result = prime * result + Arrays.hashCode(abbreviatedParentHashes);
-		result = prime * result + ((authorName == null) ? 0 : authorName.hashCode());
-		result = prime * result + ((authorDate == null) ? 0 : authorDate.hashCode());
-		result = prime * result + ((committerName == null) ? 0 : committerName.hashCode());
-		result = prime * result + ((subjectLine == null) ? 0 : subjectLine.hashCode());
-		result = prime * result + ((refNamesColored == null) ? 0 : refNamesColored.hashCode());
-		result = prime * result + ((remote == null) ? 0 : remote.hashCode());
-		result = prime * result + ((args == null) ? 0 : args.hashCode());
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                fullHash,
+                abbreviatedHash,
+                Arrays.hashCode(abbreviatedParentHashes),
+                authorName,
+                authorDate,
+                committerName,
+                subjectLine,
+                refNamesColored,
+                remote,
+                args);
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		GitCommit other = (GitCommit) obj;
-		if (fullHash == null) {
-			if (other.fullHash != null)
-				return false;
-		} else if (!fullHash.equals(other.fullHash))
-			return false;
-		if (abbreviatedHash == null) {
-			if (other.abbreviatedHash != null)
-				return false;
-		} else if (!abbreviatedHash.equals(other.abbreviatedHash))
-			return false;
-		if (!Arrays.equals(abbreviatedParentHashes, other.abbreviatedParentHashes))
-			return false;
-		if (authorName == null) {
-			if (other.authorName != null)
-				return false;
-		} else if (!authorName.equals(other.authorName))
-			return false;
-		if (authorDate == null) {
-			if (other.authorDate != null)
-				return false;
-		} else if (!authorDate.equals(other.authorDate))
-			return false;
-		if (committerName == null) {
-			if (other.committerName != null)
-				return false;
-		} else if (!committerName.equals(other.committerName))
-			return false;
-		if (subjectLine == null) {
-			if (other.subjectLine != null)
-				return false;
-		} else if (!subjectLine.equals(other.subjectLine))
-			return false;
-		if (refNamesColored == null) {
-			if (other.refNamesColored != null)
-				return false;
-		} else if (!refNamesColored.equals(other.refNamesColored))
-			return false;
-		if (remote == null) {
-			if (other.remote != null)
-				return false;
-		} else if (!remote.equals(other.remote))
-			return false;
-		if (args == null) {
-			if (other.args != null)
-				return false;
-		} else if (!args.equals(other.args))
-			return false;
-		return true;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        GitCommit other = (GitCommit) obj;
+
+        return Objects.equals(fullHash, other.fullHash)
+                && Objects.equals(abbreviatedHash, other.abbreviatedHash)
+                && Arrays.equals(abbreviatedParentHashes, other.abbreviatedParentHashes)
+                && Objects.equals(authorName, other.authorName)
+                && Objects.equals(authorDate, other.authorDate)
+                && Objects.equals(committerName, other.committerName)
+                && Objects.equals(subjectLine, other.subjectLine)
+                && Objects.equals(refNamesColored, other.refNamesColored)
+                && Objects.equals(remote, other.remote)
+                && Objects.equals(args, other.args);
+    }
 }

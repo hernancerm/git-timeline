@@ -78,7 +78,7 @@ brew upgrade git-timeline
 
 ## Build from source
 
-The project is written in Java 21.
+The project is written in Java 25.
 
 The steps below should work for macOS (arm64 and x86) and Linux (arm64 and x86).
 
@@ -86,11 +86,11 @@ The steps below should work for macOS (arm64 and x86) and Linux (arm64 and x86).
 
 GraalVM Native Image is used to compile Java to a native binary.
 
-1. Download the Java 21 JDK provided by GraalVM.
+1. Download the Java 25 JDK provided by GraalVM.
 
     Either do it manually through the website: https://www.graalvm.org/downloads/
 
-    Or use SDKMAN! (https://sdkman.io/): `sdk install java 21.0.8-graal`
+    Or use SDKMAN! (https://sdkman.io/): `sdk install java 25.0.2-graal`
 
 2. Set the env vars `JAVA_HOME` and `GRAALVM_HOME` (same value as JAVA_HOME).
 
@@ -102,7 +102,7 @@ Execute it with `./target/git-timeline`.
 
 ### Uber JAR (executable JAR)
 
-1. Download a Java 21 JDK.
+1. Download a Java 25 JDK.
 
 2. Set the env var `JAVA_HOME`.
 

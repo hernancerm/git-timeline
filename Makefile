@@ -9,7 +9,7 @@ uber:
 bin:
 ifndef GRAALVM_HOME
 	$(error Cannot build native image. The environment variable GRAALVM_HOME is undefined. \
-	Download GraalVM for Java 21 and set the variable: https://www.graalvm.org/downloads)
+	Download GraalVM for Java 25 and set the variable: https://www.graalvm.org/downloads)
 endif
 	$(NATIVE_IMAGE_MVN_CMD)
 

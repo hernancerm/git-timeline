@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
-import org.fusesource.jansi.Ansi;
+import org.jline.jansi.Ansi;
 
 public class GitTimeline implements Callable<Integer> {
 

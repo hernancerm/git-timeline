@@ -1,6 +1,6 @@
 package me.hernancerm;
 
-import static org.fusesource.jansi.Ansi.ansi;
+import static org.jline.jansi.Ansi.ansi;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;

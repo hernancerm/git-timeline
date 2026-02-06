@@ -2,7 +2,7 @@ package me.hernancerm;
 
 import static me.hernancerm.GitRemote.Platform.BITBUCKET_ORG;
 import static me.hernancerm.GitRemote.Platform.GITHUB_COM;
-import static org.fusesource.jansi.Ansi.ansi;
+import static org.jline.jansi.Ansi.ansi;
 
 import java.util.Objects;
 

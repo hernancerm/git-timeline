@@ -227,7 +227,7 @@ public class GitLogProcessBuilder {
             }
 
             gitRemote = new GitRemote(
-                    GitRemote.Platform.toEnum(matcher.group(1)),
+                    GitRemote.Platform.from(matcher.group(1)),
                     matcher.group(3),
                     matcher.group(2));
 

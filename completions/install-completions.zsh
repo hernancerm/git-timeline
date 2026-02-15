@@ -233,5 +233,6 @@ if [[ "${BREW}" -eq 1 ]]; then
     echo "For example, the dir may be /opt/homebrew/share/zsh/site-functions, where both"
     echo "files should exist. If they don't, you need the zstyle line."
     echo ""
-    echo "After upgrading Git run: git timeline --sync-zsh-completions"
+    echo "After upgrading Git, re-run this script to sync with the new Git version:"
+    echo "  BREW=1 zsh install-completions.zsh"
 fi

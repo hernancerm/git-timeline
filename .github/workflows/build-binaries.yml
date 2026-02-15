@@ -19,11 +19,11 @@ jobs:
         with:
           ref: '2.0'
 
-      - name: Install SDKMAN! and Java 21 Graal
+      - name: Install SDKMAN! and Java 25 Graal
         run: |
           curl -s "https://get.sdkman.io" | bash
           source "${HOME}/.sdkman/bin/sdkman-init.sh"
-          sdk install java 21.0.8-graal
+          sdk install java 25.0.2-graal
           java --version
 
       - name: Build binary

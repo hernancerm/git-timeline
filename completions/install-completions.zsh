@@ -1,5 +1,8 @@
 ## Install Zsh completions for git-timeline.
 ##
+## Usage: `HOMEBREW=1 zsh install-completions.zsh`
+##        Use this env var when having Homebrew.
+##
 ## Installs _git_timeline to the zsh completion directory.
 ##
 ## - _git_timeline
@@ -41,30 +44,41 @@ echo "Detected git version: $git_version"
 # git-completion.bash is already present on the system as part of a standard
 # git install. We locate it using glob patterns rather than downloading it.
 
-local -a bash_candidates
-bash_candidates=(
-    /opt/homebrew/Cellar/git/*/share/zsh/site-functions/git-completion.bash(N[1])
-    /opt/homebrew/etc/bash_completion.d/git-completion.bash(N[1])
-    $HOME/.local/share/bash-completion/completions/git(N[1])
-    /usr/share/bash-completion/completions/git(N[1])
-    /etc/bash_completion.d/git(N[1])
-)
-
 local bash_completion_script=""
-for c in "${bash_candidates[@]}"; do
-    if [[ -f "$c" ]]; then
-        bash_completion_script="$c"
-        break
+local zstyle_script=""
+
+# When brew is available, check its prefix path first and use it for the zstyle
+# line (stable across git upgrades). Otherwise fall back to well-known paths.
+if (( $+commands[brew] )); then
+    local brew_bash="$(brew --prefix)/etc/bash_completion.d/git-completion.bash"
+    if [[ -f "$brew_bash" ]]; then
+        bash_completion_script="$brew_bash"
+        zstyle_script='$(brew --prefix)/etc/bash_completion.d/git-completion.bash'
     fi
-done
+fi
+
+if [[ -z "$bash_completion_script" ]]; then
+    local -a bash_candidates
+    bash_candidates=(
+        $HOME/.local/share/bash-completion/completions/git(N[1])
+        /usr/share/bash-completion/completions/git(N[1])
+        /etc/bash_completion.d/git(N[1])
+    )
+    for c in "${bash_candidates[@]}"; do
+        if [[ -f "$c" ]]; then
+            bash_completion_script="$c"
+            zstyle_script="$c"
+            break
+        fi
+    done
+fi
 
 if [[ -z "$bash_completion_script" ]]; then
     echo ""
     echo "ERROR: git-completion.bash not found on this system."
     echo ""
     echo "Searched in:"
-    echo "  /opt/homebrew/Cellar/git/*/share/zsh/site-functions/git-completion.bash"
-    echo "  /opt/homebrew/etc/bash_completion.d/git-completion.bash"
+    echo "  \$(brew --prefix)/etc/bash_completion.d/git-completion.bash"
     echo "  \$HOME/.local/share/bash-completion/completions/git"
     echo "  /usr/share/bash-completion/completions/git"
     echo "  /etc/bash_completion.d/git"
@@ -105,24 +119,17 @@ fi
 
 # 4. DETECT ZSH COMPLETION DIRECTORY
 # ---
+# Default: /usr/local/share/zsh/site-functions
+# Set HOMEBREW=1 to install to $(brew --prefix)/share/zsh/site-functions instead.
 
-local -a completion_dirs
-completion_dirs=(
-    /opt/homebrew/share/zsh/site-functions(N[1])   # Homebrew macOS
-    /usr/share/zsh/site-functions(N[1])             # Linux system
-    /usr/local/share/zsh/site-functions(N[1])       # macOS system (Intel)
-)
+local completion_dir="/usr/local/share/zsh/site-functions"
 
-local completion_dir=""
-for d in "${completion_dirs[@]}"; do
-    if [[ -d "$d" ]]; then
-        completion_dir="$d"
-        break
+if [[ "${HOMEBREW:-0}" == "1" ]]; then
+    if (( ! $+commands[brew] )); then
+        echo "ERROR: HOMEBREW=1 set but brew is not installed or not in PATH"
+        exit 1
     fi
-done
-
-if [[ -z "$completion_dir" ]]; then
-    completion_dir="$HOME/.zsh/completions"
+    completion_dir="$(brew --prefix)/share/zsh/site-functions"
 fi
 
 if [[ ! -d "$completion_dir" ]]; then
@@ -133,7 +140,7 @@ if [[ ! -d "$completion_dir" ]]; then
 fi
 
 # 5. GENERATE _git_timeline
-#
+# ---
 # '#compdef -' tells compinit to autoload this file as a function stub without
 # binding it to any command. This makes _git_timeline() available in $functions
 # from shell init, so the _git bridge's __git_complete_command() can find and
@@ -147,7 +154,6 @@ fi
 #   3. Set up bash-style cursor variables (cur/cword/prev) from zsh's 1-indexed
 #      CURRENT/words[] before ksh emulation switches arrays to 0-indexed
 #   4. Call _git_log via 'emulate ksh -c' for bash/ksh compatibility
-# ---
 
 echo "Generating _git_timeline"
 
@@ -249,26 +255,9 @@ cp "$temp_dir/_git_timeline" "$completion_dir/_git_timeline" || {
 }
 echo "- Installed: _git_timeline"
 
-# 7. SUMMARY
+# 7. CAVEATS
 # ---
 
-# Build the zstyle line for the user to add to ~/.zshrc.
-# For Homebrew Cellar paths, replace the version component with a glob so it
-# stays version-agnostic across 'brew upgrade git'.
-zstyle_script="${bash_completion_script}"
-if [[ "$zstyle_script" == /opt/homebrew/Cellar/git/*/share/zsh/site-functions/git-completion.bash ]]; then
-    zstyle_script="/opt/homebrew/Cellar/git/*/share/zsh/site-functions/git-completion.bash(N[1])"
-fi
-
-echo ""
-echo "Completions installed. Next steps:"
-echo ""
-echo "  1. Restart your shell:  exec zsh"
-echo "  2. Try:                 git timeline --<TAB>"
-echo ""
-echo "For completions to work with git aliases (e.g. 'g l --<TAB>' where l=timeline),"
-echo "add this line to your ~/.zshrc:"
-echo ""
+echo "For completions to work add this line to your ~/.zshrc:"
 echo "  zstyle ':completion:*:*:git:*' script ${zstyle_script}"
-echo ""
 echo "To update completions after a git upgrade, re-run: make install-completions"

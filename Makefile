@@ -20,4 +20,3 @@ release:
 	@cp -v target/git-timeline.jar release
 	$(NATIVE_IMAGE_MVN_CMD) -DskipTests
 	@cp -v target/git-timeline release
-

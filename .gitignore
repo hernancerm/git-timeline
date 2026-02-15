@@ -5,6 +5,12 @@ dependency-reduced-pom.xml
 !**/src/main/**/target/
 !**/src/test/**/target/
 
+# Generated zsh completion files (created by install-completions.sh)
+_git-timeline
+
+# Git's authoritative bash completion (downloaded from GitHub by install-completions.sh)
+git-completion.bash
+
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml

@@ -20,3 +20,19 @@ release:
 	@cp -v target/git-timeline.jar release
 	$(NATIVE_IMAGE_MVN_CMD) -DskipTests
 	@cp -v target/git-timeline release
+
+.PHONY: install-completions
+install-completions:
+	bash install-completions.sh
+
+.PHONY: uninstall-completions
+uninstall-completions:
+	bash uninstall-completions.sh
+
+.PHONY: install
+install: uber install-completions
+	@echo "✓ git-timeline installed successfully!"
+
+.PHONY: uninstall
+uninstall: uninstall-completions
+	@echo "✓ git-timeline completions uninstalled"

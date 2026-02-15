@@ -76,6 +76,40 @@ brew upgrade git-timeline
   [documentation of git-log](https://git-scm.com/docs/git-log#Documentation/git-log.txt---dateformat).
 - Pager command: Use the env var `GIT_PAGER`, `core.pager` from gitconfig or env var `PAGER`.
 
+## Zsh Completions
+
+Zsh shell completions are available for `git-timeline` and are installed automatically 
+(for Homebrew) or with a single command (for manual builds).
+
+The completions exactly match your installed git version and automatically update 
+when you upgrade git.
+
+### Installation
+
+**For Homebrew:**
+```bash
+brew install git-timeline
+# Completions installed automatically
+```
+
+**For manual builds:**
+```bash
+make uber                      # Build the JAR executable
+make install-completions      # Install zsh completions
+```
+
+### Uninstallation
+
+To remove completions:
+```bash
+make uninstall-completions
+```
+
+### Documentation
+
+For detailed information about setup, usage, troubleshooting, and more, see 
+[COMPLETIONS.md](./COMPLETIONS.md).
+
 ## Build from source
 
 The project is written in Java 25.

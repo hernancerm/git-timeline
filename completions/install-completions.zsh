@@ -1,7 +1,6 @@
 ## Install Zsh completions for git-timeline.
 ##
-## Usage: `HOMEBREW=1 zsh install-completions.zsh`
-##        Use this env var when having Homebrew.
+## Usage: `BREW=1 zsh install-completions.zsh`
 ##
 ## Installs _git_timeline to the zsh completion directory.
 ##
@@ -39,52 +38,29 @@ fi
 
 echo "Detected git version: $git_version"
 
-# 2. LOCATE EXISTING git-completion.bash
+# 2. DETECT ZSH COMPLETION DIRECTORY AND LOCATE git-completion.bash
 # ---
-# git-completion.bash is already present on the system as part of a standard
-# git install. We locate it using glob patterns rather than downloading it.
 
+local completion_dir=""
 local bash_completion_script=""
 local zstyle_script=""
 
-# When brew is available, check its prefix path first and use it for the zstyle
-# line (stable across git upgrades). Otherwise fall back to well-known paths.
-if (( $+commands[brew] )); then
-    local brew_bash="$(brew --prefix)/etc/bash_completion.d/git-completion.bash"
-    if [[ -f "$brew_bash" ]]; then
-        bash_completion_script="$brew_bash"
-        zstyle_script='$(brew --prefix)/etc/bash_completion.d/git-completion.bash'
+if [[ "${BREW:-0}" == "1" ]]; then
+    if (( ! $+commands[brew] )); then
+        echo "ERROR: BREW=1 set but brew is not installed or not in PATH"
+        exit 1
     fi
-fi
-
-if [[ -z "$bash_completion_script" ]]; then
-    local -a bash_candidates
-    bash_candidates=(
-        $HOME/.local/share/bash-completion/completions/git(N[1])
-        /usr/share/bash-completion/completions/git(N[1])
-        /etc/bash_completion.d/git(N[1])
-    )
-    for c in "${bash_candidates[@]}"; do
-        if [[ -f "$c" ]]; then
-            bash_completion_script="$c"
-            zstyle_script="$c"
-            break
-        fi
-    done
-fi
-
-if [[ -z "$bash_completion_script" ]]; then
-    echo ""
-    echo "ERROR: git-completion.bash not found on this system."
-    echo ""
-    echo "Searched in:"
-    echo "  \$(brew --prefix)/etc/bash_completion.d/git-completion.bash"
-    echo "  \$HOME/.local/share/bash-completion/completions/git"
-    echo "  /usr/share/bash-completion/completions/git"
-    echo "  /etc/bash_completion.d/git"
-    echo ""
-    echo "git-completion.bash is included with a standard git install. If you"
-    echo "installed git via Homebrew, try: brew install git"
+    completion_dir="$(brew --prefix)/share/zsh/site-functions"
+    local brew_bash="$(brew --prefix)/etc/bash_completion.d/git-completion.bash"
+    if [[ ! -f "$brew_bash" ]]; then
+        echo "ERROR: git-completion.bash not found at $brew_bash"
+        echo "Try: brew install git"
+        exit 1
+    fi
+    bash_completion_script="$brew_bash"
+    zstyle_script='$(brew --prefix)/etc/bash_completion.d/git-completion.bash'
+else
+    echo "ERROR: No environment variable set. Supported: BREW=1"
     exit 1
 fi
 
@@ -117,20 +93,8 @@ if ! curl -fsSL "$zsh_url" -o "$temp_dir/git-completion.zsh"; then
     exit 1
 fi
 
-# 4. DETECT ZSH COMPLETION DIRECTORY
+# 4. CREATE ZSH COMPLETION DIRECTORY IF NEEDED
 # ---
-# Default: /usr/local/share/zsh/site-functions
-# Set HOMEBREW=1 to install to $(brew --prefix)/share/zsh/site-functions instead.
-
-local completion_dir="/usr/local/share/zsh/site-functions"
-
-if [[ "${HOMEBREW:-0}" == "1" ]]; then
-    if (( ! $+commands[brew] )); then
-        echo "ERROR: HOMEBREW=1 set but brew is not installed or not in PATH"
-        exit 1
-    fi
-    completion_dir="$(brew --prefix)/share/zsh/site-functions"
-fi
 
 if [[ ! -d "$completion_dir" ]]; then
     mkdir -p "$completion_dir" || {
@@ -258,6 +222,16 @@ echo "- Installed: _git_timeline"
 # 7. CAVEATS
 # ---
 
-echo "For completions to work add this line to your ~/.zshrc:"
-echo "  zstyle ':completion:*:*:git:*' script ${zstyle_script}"
-echo "To update completions after a git upgrade, re-run: make install-completions"
+if [[ "${BREW}" -eq 1 ]]; then
+    echo ""
+    echo "Caveats:"
+    echo ""
+    echo "If Git completions do not work then add this line to your ~/.zshrc"
+    echo "  zstyle ':completion:*:*:git:*' script ${zstyle_script}"
+    echo "The issue usually is that git-completion.bash is not in the same dir as _git."
+    echo "You may run 'brew reinstall git' and check in the Caveats the completions dir."
+    echo "For example, the dir may be /opt/homebrew/share/zsh/site-functions, where both"
+    echo "files should exist. If they don't, you need the zstyle line."
+    echo ""
+    echo "After a git upgrade re-run: make install-completions"
+fi

@@ -1,22 +1,22 @@
 ## Uninstall Zsh completions for git-timeline.
 ##
-## Usage: `HOMEBREW=1 zsh uninstall-completions.zsh`
-##        Use this env var when having Homebrew.
+## Usage: `BREW=1 zsh uninstall-completions.zsh`
 
 # 1. DETECT ZSH COMPLETION DIRECTORY
 # ---
 # Must match the directory used at install time.
-# Default: /usr/local/share/zsh/site-functions
-# Set HOMEBREW=1 to uninstall from $(brew --prefix)/share/zsh/site-functions instead.
 
-local completion_dir="/usr/local/share/zsh/site-functions"
+local completion_dir=""
 
-if [[ "${HOMEBREW:-0}" == "1" ]]; then
+if [[ "${BREW:-0}" == "1" ]]; then
     if (( ! $+commands[brew] )); then
-        echo "ERROR: HOMEBREW=1 set but brew is not installed or not in PATH"
+        echo "ERROR: BREW=1 set but brew is not installed or not in PATH"
         exit 1
     fi
     completion_dir="$(brew --prefix)/share/zsh/site-functions"
+else
+    echo "ERROR: No environment variable set. Supported: BREW=1"
+    exit 1
 fi
 
 # 2. SEARCH FOR COMPLETION FILES

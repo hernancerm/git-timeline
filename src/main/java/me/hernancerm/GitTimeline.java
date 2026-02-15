@@ -119,7 +119,7 @@ public class GitTimeline implements Callable<Integer> {
 
     private void handleSyncZshCompletions() {
         var base_url = "https://raw.githubusercontent.com/hernancerm/git-timeline";
-        var path = "/blob/main/completions/install-completions.zsh";
+        var path = "/refs/heads/main/completions/install-completions.zsh";
         var url = base_url + path;
         try {
             var client = HttpClient.newHttpClient();

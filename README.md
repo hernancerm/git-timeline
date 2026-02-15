@@ -78,6 +78,8 @@ brew upgrade git-timeline
 
 ## Completions
 
+Completions only work for `git timeline`, not `git-timeline`.
+
 Use a command below to sync the completions of `git timeline` when you upgrade Git.
 
 ### Zsh

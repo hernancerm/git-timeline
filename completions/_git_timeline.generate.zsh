@@ -48,7 +48,7 @@ fi
 
 git_path=$(which git)
 local bash_completion_script=""
-local zstyle_script=""
+local git_completion_bash_filepath=""
 
 if [[ "$git_path" == "$(brew --prefix)/bin/git" ]]; then
     local brew_candidates=(
@@ -57,7 +57,7 @@ if [[ "$git_path" == "$(brew --prefix)/bin/git" ]]; then
     for candidate in "${brew_candidates[@]}"; do
         if [[ -f "$candidate" ]]; then
             bash_completion_script="$candidate"
-            zstyle_script='$(brew --prefix)/share/zsh/site-functions/git-completion.bash'
+            git_completion_bash_filepath='$(brew --prefix)/share/zsh/site-functions/git-completion.bash'
             break
         fi
     done
@@ -128,9 +128,9 @@ cat << HEADER
 # git-completion.bash it is running in a zsh context; 'complete' is
 # neutralised so bash registration calls are no-ops.
 
-local script="${zstyle_script}"
+local script="${git_completion_bash_filepath}"
 if [[ ! -f "\$script" ]]; then
-    _message "git-completion.bash not found at \$script; run: zsh _git_timeline.generate.zsh > _git_timeline"
+    _message "git-completion.bash not found at \$script"
     return 1
 fi
 local old_complete="\$functions[complete]"

@@ -25,8 +25,8 @@ found_files=()
 
 for dir in "${search_dirs[@]}"; do
     if [ -d "$dir" ]; then
-        if [ -f "$dir/_git-timeline" ]; then
-            found_files+=("$dir/_git-timeline")
+        if [ -f "$dir/_git_timeline" ]; then
+            found_files+=("$dir/_git_timeline")
         fi
         if [ -f "$dir/git-completion.bash" ]; then
             found_files+=("$dir/git-completion.bash")

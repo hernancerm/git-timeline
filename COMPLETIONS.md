@@ -13,7 +13,7 @@ This document explains how zsh completions work for `git-timeline` and how to in
 - ✅ Works on macOS, Linux, and other Unix systems
 - ✅ Works with any git installation method (Homebrew, package manager, from-source)
 - ✅ Auto-updates completions when you upgrade git
-- ✅ Both `git-timeline` and `git timeline` forms supported
+- ✅ `git timeline` form supported
 
 ## Installation
 
@@ -54,14 +54,15 @@ When you run `make install-completions`:
    - `git-completion.bash` — git's bash completion functions (defines `_git_log` and all other subcommand completers)
    - `git-completion.zsh` — git's official zsh-to-bash bridge (defines `__gitcomp*` zsh wrappers)
 
-3. **Generates `_git-timeline`** — a self-contained zsh completion file that:
+3. **Generates `_git_timeline`** — a zsh completion function that:
    - Sources `git-completion.bash` using git's own bridge technique
    - Embeds the `__gitcomp*` zsh wrapper functions verbatim from `git-completion.zsh`
-   - Defines `_git_timeline()` which calls `_git_log` via `emulate ksh -c`
+   - Sets up `cur`/`cword`/`prev` from zsh's completion state, then calls `_git_log`
+     via `emulate ksh -c`
 
 4. **Installs two files** to your zsh completion directory:
-   - `_git-timeline` — the generated zsh completion
-   - `git-completion.bash` — git's bash completion (sourced at completion time by `_git-timeline`)
+   - `_git_timeline` — the zsh completion function (registered via `#compdef -`)
+   - `git-completion.bash` — git's bash completion (sourced at completion time)
 
    Installed to the first existing directory from:
    - `/opt/homebrew/share/zsh/site-functions` (Homebrew macOS)
@@ -97,11 +98,11 @@ Git ships two completion files that work together via a proven bridge pattern:
    emulate ksh -c _git_log
    ```
 
-**`_git-timeline`** uses the identical pattern — it is generated fresh from the same authoritative sources at your exact git version, so completions always match your installed git.
+**`_git_timeline`** uses the identical pattern — it is generated fresh from the same authoritative sources at your exact git version, so completions always match your installed git.
 
 - ✅ **Authoritative sources** — downloaded directly from git's GitHub at your version tag
 - ✅ **Version-exact** — `v2.47.1` installs `v2.47.1` completion files, not whatever ships with your OS
-- ✅ **Self-contained** — `_git-timeline` embeds the bridge; no dependency on how system `_git` is installed
+- ✅ **Self-contained** — `_git_timeline` embeds the bridge wrappers; no dependency on how system `_git` is installed
 - ✅ **Idempotent** — re-running always overwrites with the correct version
 
 ### Version Compatibility
@@ -118,31 +119,22 @@ Git ships two completion files that work together via a proven bridge pattern:
 ### Basic Examples
 
 ```bash
-# Complete git log options
-git-timeline --aut<TAB>        # → --author, --all-match, etc.
+# Complete git log options via 'git timeline'
+git timeline --aut<TAB>        # → --author, --all-match, etc.
 git timeline --dat<TAB>        # → --date, --date-order, etc.
-git-timeline --form<TAB>       # → --format
+git timeline --form<TAB>       # → --format
 git timeline --oneline<TAB>    # → --oneline
-
-# Both command forms work identically
-git-timeline --<TAB>           # Shows all options
 git timeline --<TAB>           # Shows all options
-
-# Git-timeline-specific options
-git-timeline --hel<TAB>        # → --help
-git-timeline --ver<TAB>        # → --version
-git-timeline --no-p<TAB>       # → --no-pager
 ```
 
 ### Argument Completion
 
 ```bash
-# Complete branch names
-git-timeline --author <name><TAB>    # Suggests authors
-git timeline main..<TAB>             # Suggests remote branches
+# Complete refs and branches
+git timeline main..<TAB>       # Suggests remote branches
 
 # Date format completion (if specified with =)
-git-timeline --date=<TAB>            # Suggests date formats
+git timeline --date=<TAB>      # Suggests date formats
 ```
 
 ## Updating Completions
@@ -181,7 +173,7 @@ This will:
 Looking for installed git-timeline completion files...
 
 Found the following completion files:
-  - /opt/homebrew/share/zsh/site-functions/_git-timeline
+  - /opt/homebrew/share/zsh/site-functions/_git_timeline
   - /opt/homebrew/share/zsh/site-functions/git-completion.bash
 
 This will DELETE the files listed above.
@@ -189,7 +181,7 @@ This will DELETE the files listed above.
 Continue? (y/N) y
 
 Deleting completion files...
-✓ Deleted: /opt/homebrew/share/zsh/site-functions/_git-timeline
+✓ Deleted: /opt/homebrew/share/zsh/site-functions/_git_timeline
 ✓ Deleted: /opt/homebrew/share/zsh/site-functions/git-completion.bash
 
 ==========================================
@@ -240,11 +232,9 @@ exec zsh
 2. Try again later
 3. Verify GitHub is accessible (try `curl https://github.com`)
 
-### Completions Match git, Not git-timeline Specific
+### Completions Match git log
 
-This is expected! `git-timeline` is a drop-in replacement for `git log`, so all its completions are the same as `git log`. The completions include:
-- All git log options
-- git-timeline-specific options (`--help`, `--version`, `--no-pager`)
+This is by design. `git-timeline` is a drop-in replacement for `git log`, so its completions are identical to `git log`'s completions.
 
 ### Different Completions Between Versions
 
@@ -268,7 +258,7 @@ Very old versions (< 2.30.0) may have compatibility issues but are not officiall
 ### Generated Files Location
 
 Two files are installed to the zsh site-functions directory:
-- `_git-timeline` — zsh completion for `git-timeline`, generated by the install script
+- `_git_timeline` — zsh completion function for `git timeline`, registered via `#compdef -`
 - `git-completion.bash` — git's authoritative bash completion, downloaded from GitHub
 
 These are **generated/downloaded files**, not source files, and are not committed to the repository.

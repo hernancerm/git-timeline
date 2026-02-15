@@ -6,7 +6,7 @@ dependency-reduced-pom.xml
 !**/src/test/**/target/
 
 # Generated zsh completion files (created by install-completions.sh)
-_git-timeline
+_git_timeline
 
 # Git's authoritative bash completion (downloaded from GitHub by install-completions.sh)
 git-completion.bash

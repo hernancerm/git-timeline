@@ -5,12 +5,16 @@ set -e
 # ============================================================================
 # install-completions.sh - Install zsh completions for git-timeline
 #
-# This script:
-# 1. Detects your installed git version
-# 2. Downloads the authoritative git completion files from GitHub at that
-#    exact version (git-completion.bash and git-completion.zsh)
-# 3. Generates _git-timeline using git's own zsh-to-bash bridge pattern
-# 4. Installs git-completion.bash and _git-timeline to the zsh completion dir
+# Installs two files to the zsh completion directory:
+#
+#   _git_timeline       - zsh completion function for 'git timeline'
+#   git-completion.bash - git's authoritative bash completion (sourced by above)
+#
+# How 'git timeline --<TAB>' works:
+#   The existing _git zsh completion (from git or Homebrew) handles 'git <sub>'
+#   completions. When the subcommand is 'timeline', it looks up _git_timeline()
+#   in $functions and calls it. _git_timeline() sources git-completion.bash
+#   and delegates to _git_log, giving identical completions to 'git log'.
 #
 # Re-running is safe and idempotent. Re-run after a git upgrade to update.
 # ============================================================================
@@ -24,7 +28,7 @@ if ! command -v git &> /dev/null; then
     exit 1
 fi
 
-# Strip everything after the version number (e.g. "(Apple Git-130)" on macOS)
+# Strip OS-specific suffixes (e.g. "(Apple Git-130)" on macOS)
 git_version=$(git --version | sed 's/^git version //' | awk '{print $1}')
 if [ -z "$git_version" ]; then
     echo "ERROR: Could not parse git version from 'git --version'"
@@ -88,7 +92,6 @@ detect_completion_dir() {
         fi
     done
 
-    # Default: user directory (will be created below)
     echo "$HOME/.zsh/completions"
     return 0
 }
@@ -103,82 +106,52 @@ if [ ! -d "$completion_dir" ]; then
 fi
 
 # ============================================================================
-# SECTION 4: EXTRACT ZSH WRAPPER FUNCTIONS FROM git-completion.zsh
+# SECTION 4: GENERATE _git_timeline
 #
-# git-completion.zsh defines zsh-compatible wrappers for bash completion
-# primitives (__gitcomp, __gitcomp_nl, etc.) and helper functions.
-# We extract these verbatim and embed them in _git-timeline so that the
-# generated file is fully self-contained (no dependency on a system _git).
+# '#compdef -' tells compinit to autoload this file as a function stub without
+# binding it to any command. This makes _git_timeline() available in $functions
+# from shell init, so the _git bridge's __git_complete_command() can find and
+# call it when completing 'git timeline --<TAB>'.
 #
-# We extract from the first __gitcomp function definition through the last
-# closing brace before the _git_zsh / __git_zsh_* / _git() functions —
-# i.e. everything between the sourcing block and the zsh main dispatch.
-# ============================================================================
-
-# Extract wrapper functions: from first '__gitcomp ()' to end of
-# '__git_complete_command ()' block — these are the zsh<->bash bridge helpers.
-# We use awk to grab from '__gitcomp ()' up through '_git_zsh ()' exclusive.
-zsh_wrappers=$(awk '
-    /^__gitcomp \(\)/ { printing=1 }
-    printing { print }
-    /^_git_zsh \(\)/ { printing=0 }
-' "$temp_dir/git-completion.zsh")
-
-# Also grab __git_complete_command and __git_zsh_bash_func, which are needed
-# by _git_timeline to call _git_log in ksh-emulation mode.
-zsh_helpers=$(awk '
-    /^__git_complete_command \(\)/ { printing=1 }
-    printing { print }
-    /^\}/ && printing { print ""; printing=0 }
-' "$temp_dir/git-completion.zsh" | head -20)
-
-git_complete_command=$(awk '
-    /^__git_complete_command \(\)$/ { p=1 }
-    p { print }
-    /^\}$/ && p { p=0 }
-' "$temp_dir/git-completion.zsh")
-
-# ============================================================================
-# SECTION 5: GENERATE _git-timeline
-#
-# The generated file uses git's own zsh-to-bash bridge pattern:
-#   1. Source git-completion.bash (with GIT_SOURCING_ZSH_COMPLETION=y so
-#      bash `complete` calls become no-ops in zsh context)
-#   2. Define zsh wrapper functions (__gitcomp* etc.) copied from
-#      git-completion.zsh so bash completion output is translated to zsh
-#   3. Define _git_timeline() which calls _git_log (from git-completion.bash)
-#      via `emulate ksh -c` for bash/ksh compatibility
-#   4. Call _git_timeline to trigger completion
+# The function uses git's zsh-to-bash bridge pattern from git-completion.zsh:
+#   1. Source git-completion.bash (GIT_SOURCING_ZSH_COMPLETION=y suppresses
+#      bash 'complete' registrations that are no-ops in zsh)
+#   2. Define zsh wrapper functions (__gitcomp* etc.) copied verbatim from
+#      git-completion.zsh — these translate bash completion output to zsh compadd
+#   3. Set up bash-style cursor variables (cur/cword/prev) from zsh's 1-indexed
+#      CURRENT/words[] before ksh emulation switches arrays to 0-indexed
+#   4. Call _git_log via 'emulate ksh -c' for bash/ksh compatibility
 # ============================================================================
 
 echo ""
-echo "Generating _git-timeline..."
+echo "Generating _git_timeline..."
 
-cat > "$temp_dir/_git-timeline" << HEADER
-#compdef git-timeline
+cat > "$temp_dir/_git_timeline" << HEADER
+#compdef -
 
 # Auto-generated by install-completions.sh — do not edit manually.
 # Regenerate with: make install-completions
 #
 # Git version: ${git_version}
 #
-# Uses git's official zsh-to-bash bridge pattern from git-completion.zsh.
-# Sources git-completion.bash to get all git completion functions (_git_log,
-# __gitcomp_builtin, etc.), then provides zsh-compatible wrappers so the bash
-# completion output is correctly translated to zsh compadd calls.
+# '#compdef -' causes compinit to register this file as an autoloadable
+# function stub without binding it to any command. After 'exec zsh', the
+# _git completion bridge finds _git_timeline() in \$functions and calls it
+# when completing 'git timeline --<TAB>'.
+#
+# Uses git's official zsh-to-bash bridge pattern from git-completion.zsh v${git_version}.
 
 # ---------------------------------------------------------------------------
 # Step 1: Source git-completion.bash
 #
-# \${(%):-%x} is the path of this file; :h gives its directory.
+# \${\${(%):-%x}:h} is the directory containing this file.
 # git-completion.bash is installed alongside this file by install-completions.sh.
 # GIT_SOURCING_ZSH_COMPLETION=y tells git-completion.bash it is running in a
-# zsh context; the bash 'complete' builtin is neutralised so its registration
-# calls are no-ops.
+# zsh context; 'complete' is neutralised so bash registration calls are no-ops.
 # ---------------------------------------------------------------------------
 local script="\${\${(%):-%x}:h}/git-completion.bash"
 if [[ ! -f "\$script" ]]; then
-    _message "git-completion.bash not found next to _git-timeline; run: make install-completions"
+    _message "git-completion.bash not found next to _git_timeline; run: make install-completions"
     return 1
 fi
 local old_complete="\$functions[complete]"
@@ -194,59 +167,41 @@ functions[complete]="\$old_complete"
 # ---------------------------------------------------------------------------
 HEADER
 
-# Append the wrapper functions extracted from the official git-completion.zsh
-# Everything from __gitcomp() through (not including) _git_zsh()
+# Append __gitcomp* wrappers: everything from __gitcomp() up to _git_zsh()
 awk '
-    /^__gitcomp \(\)/ { printing=1 }
-    /^_git_zsh \(\)/ { exit }
-    printing { print }
-' "$temp_dir/git-completion.zsh" >> "$temp_dir/_git-timeline"
+    /^__gitcomp \(\)/  { printing=1 }
+    /^_git_zsh \(\)/   { exit }
+    printing           { print }
+' "$temp_dir/git-completion.zsh" >> "$temp_dir/_git_timeline"
 
-# Append __git_complete_command (needed to call _git_log in ksh mode)
-awk '
-    /^__git_complete_command \(\)$/ { p=1 }
-    p { print }
-    /^\}$/ && p { p=0; exit }
-' "$temp_dir/git-completion.zsh" >> "$temp_dir/_git-timeline"
-
-cat >> "$temp_dir/_git-timeline" << 'FOOTER'
+cat >> "$temp_dir/_git_timeline" << 'FOOTER'
 
 # ---------------------------------------------------------------------------
 # Step 3: Entry point
 #
-# _git_timeline() is called by zsh's completion system when completing
-# `git-timeline <TAB>`. It sets up the bash-style cursor variables and
-# delegates to _git_log (loaded from git-completion.bash above) via
-# `emulate ksh -c` for bash/ksh compatibility — the same mechanism used
-# by git-completion.zsh's __git_complete_command().
+# Set up bash-style cursor variables while still in zsh context (1-indexed
+# arrays). CURRENT is a zsh 1-based index; words[CURRENT] is the word under
+# the cursor. These must be captured before ksh emulation switches arrays to
+# 0-indexed — otherwise words[CURRENT] is out of bounds and cur="".
+#
+# Then call _git_log via 'emulate ksh -c' (not 'emulate -L ksh' at function
+# top) so the locals set above remain visible inside _git_log.
 # ---------------------------------------------------------------------------
-_git_timeline()
-{
-    # Set up bash-style cursor variables while still in zsh context (1-indexed
-    # arrays). CURRENT is a zsh 1-based index; words[CURRENT] is the word
-    # under the cursor. These must be captured before any ksh emulation
-    # switches arrays to 0-indexed.
-    local cur cword prev
-    local __git_repo_path
-    local __git_cmd_idx=1
+local cur cword prev
+local __git_repo_path
+local __git_cmd_idx=1
 
-    cur=${words[CURRENT]}
-    prev=${words[CURRENT-1]}
-    let cword=CURRENT-1
+cur=${words[CURRENT]}
+prev=${words[CURRENT-1]}
+let cword=CURRENT-1
 
-    # Run _git_log in ksh emulation mode for bash compatibility.
-    # Using `emulate ksh -c` (not `emulate -L ksh` at function top) ensures
-    # the local variables set above are visible to _git_log as expected.
-    emulate ksh -c _git_log
-}
-
-_git_timeline
+emulate ksh -c _git_log
 FOOTER
 
-echo "Generated _git-timeline"
+echo "Generated _git_timeline"
 
 # ============================================================================
-# SECTION 6: INSTALL FILES
+# SECTION 5: INSTALL FILES
 # ============================================================================
 
 echo ""
@@ -258,14 +213,14 @@ cp "$temp_dir/git-completion.bash" "$completion_dir/git-completion.bash" || {
 }
 echo "  Installed: git-completion.bash"
 
-cp "$temp_dir/_git-timeline" "$completion_dir/_git-timeline" || {
-    echo "ERROR: Could not install _git-timeline to $completion_dir"
+cp "$temp_dir/_git_timeline" "$completion_dir/_git_timeline" || {
+    echo "ERROR: Could not install _git_timeline to $completion_dir"
     exit 1
 }
-echo "  Installed: _git-timeline"
+echo "  Installed: _git_timeline"
 
 # ============================================================================
-# SECTION 7: SUMMARY
+# SECTION 6: SUMMARY
 # ============================================================================
 
 echo ""
@@ -277,12 +232,12 @@ echo "Git version:    $git_version"
 echo "Installed to:   $completion_dir"
 echo ""
 echo "Files installed:"
-echo "  _git-timeline       (zsh completion for 'git-timeline')"
-echo "  git-completion.bash (git's bash completion, sourced by _git-timeline)"
+echo "  _git_timeline       (zsh completion for 'git timeline')"
+echo "  git-completion.bash (git's bash completion, sourced by _git_timeline)"
 echo ""
 echo "Next steps:"
 echo "  1. Restart your shell:  exec zsh"
-echo "  2. Try:                 git-timeline --<TAB>"
+echo "  2. Try:                 git timeline --<TAB>"
 echo ""
 echo "To update completions after a git upgrade, re-run: make install-completions"
 echo ""

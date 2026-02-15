@@ -1,16 +1,7 @@
+## Uninstall Zsh completions for git-timeline.
 
-# ============================================================================
-# uninstall-completions.zsh - Uninstall zsh completions for git-timeline
-#
-# This script:
-# 1. Finds installed git-timeline completion files
-# 2. Shows user which files will be deleted
-# 3. Prompts for confirmation (y/n)
-# 4. Deletes files only if user confirms
-# ============================================================================
-
-echo "Looking for installed git-timeline completion files..."
-echo ""
+# 1. SEARCH FOR COMPLETION FILES
+# ---
 
 # Search in standard locations
 local search_dirs=(
@@ -27,72 +18,39 @@ for dir in "${search_dirs[@]}"; do
         if [[ -f "$dir/_git_timeline" ]]; then
             found_files+=("$dir/_git_timeline")
         fi
-        if [[ -f "$dir/git-completion.bash" ]]; then
-            found_files+=("$dir/git-completion.bash")
+        if [[ -f "$dir/git-completion-for-git-timeline.bash" ]]; then
+            found_files+=("$dir/git-completion-for-git-timeline.bash")
         fi
     fi
 done
 
-# ============================================================================
-# CHECK IF FILES WERE FOUND
-# ============================================================================
+# 2. CHECK IF COMPLETION FILES WERE FOUND
+# ---
 
 if (( ${#found_files[@]} == 0 )); then
-    echo "No git-timeline completion files found."
-    echo ""
-    echo "Searched in:"
+    echo "No git-timeline completion files found. Searched in:"
     for dir in "${search_dirs[@]}"; do
-        echo "  - $dir"
+        echo "- $dir"
     done
-    echo ""
     exit 0
 fi
 
-# ============================================================================
-# DISPLAY FILES TO BE DELETED
-# ============================================================================
+# 3. DISPLAY COMPLETION FILES TO BE DELETED
+# ---
 
 echo "Found the following completion files:"
-echo ""
 for file in "${found_files[@]}"; do
-    echo "  - $file"
+    echo "- $file"
 done
-echo ""
 
-# ============================================================================
-# PROMPT USER FOR CONFIRMATION
-# ============================================================================
+# 4. ASK FOR CONFIRMATION BEFORE DELETING
+# ---
 
-echo "This will DELETE the files listed above."
-echo ""
+echo "This will DELETE the files listed above"
 if ! read -q "?Continue? (y/N) "; then
     echo ""
-    echo "Cancelled. No files were deleted."
+    echo "Cancelled. No files were deleted"
     exit 0
 fi
 echo ""
-
-# ============================================================================
-# DELETE FILES
-# ============================================================================
-
-echo ""
-echo "Deleting completion files..."
-
-for file in "${found_files[@]}"; do
-    if rm -f "$file" 2>/dev/null; then
-        echo "✓ Deleted: $file"
-    else
-        echo "✗ Failed to delete: $file"
-    fi
-done
-
-echo ""
-echo "=========================================="
-echo "✓ Completions uninstalled successfully!"
-echo "=========================================="
-echo ""
-echo "Next steps:"
-echo "  1. Restart your zsh shell (exec zsh) or open a new terminal"
-echo "  2. Completions will no longer be available for git-timeline"
-echo ""
+echo "Completion files uninstalled successfully"

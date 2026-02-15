@@ -1,26 +1,29 @@
-
-# ============================================================================
-# install-completions.zsh - Install zsh completions for git-timeline
-#
-# Installs two files to the zsh completion directory:
-#
-#   _git_timeline       - zsh completion function for 'git timeline'
-#   git-completion.bash - git's authoritative bash completion (sourced by above)
-#
-# How 'git timeline --<TAB>' works:
-#   The existing _git zsh completion (from git or Homebrew) handles 'git <sub>'
-#   completions. When the subcommand is 'timeline', it looks up _git_timeline()
-#   in $functions and calls it. _git_timeline() sources git-completion.bash
-#   and delegates to _git_log, giving identical completions to 'git log'.
-#
-# Re-running is safe and idempotent. Re-run after a git upgrade to update.
-# ============================================================================
+## Install Zsh completions for git-timeline.
+##
+## Installs two files to the zsh completion directory:
+##
+## - _git_timeline
+##   - Zsh completion function for 'git timeline'.
+##   - This script generates the _git_timeline completion file.
+## - git-completion-for-git-timeline.bash
+##   - Git's authoritative bash completion:
+##     https://github.com/git/git/blob/master/contrib/completion/git-completion.bash
+##   - This Bash file is sourced by the _git_timeline completion file.
+##
+## How 'git timeline --<Tab>' works:
+##
+## The existing _git Zsh completion from:
+## > https://github.com/git/git/blob/master/contrib/completion/git-completion.zsh
+## handles 'git <sub>' completions. When the subcommand is 'timeline', it looks up
+## _git_timeline() in $functions and calls it. _git_timeline() sources git-completion.bash
+## and delegates to _git_log, giving identical completions to 'git log'.
+##
+## Re-running is safe. Re-run after a Git upgrade to update.
 
 setopt ERR_EXIT
 
-# ============================================================================
-# SECTION 1: DETECT GIT VERSION
-# ============================================================================
+# 1. DETECT GIT VERSION
+# ---
 
 if (( ! $+commands[git] )); then
     echo "ERROR: git is not installed or not in PATH"
@@ -36,19 +39,21 @@ fi
 
 echo "Detected git version: $git_version"
 
-# ============================================================================
-# SECTION 2: DOWNLOAD AUTHORITATIVE GIT COMPLETION FILES
-# ============================================================================
+# 2. DOWNLOAD AUTHORITATIVE GIT COMPLETION FILES
+# ---
 
 base_url="https://raw.githubusercontent.com/git/git/v${git_version}/contrib/completion"
 bash_url="${base_url}/git-completion.bash"
+bash_dest_name="git-completion-for-git-timeline.bash"
 zsh_url="${base_url}/git-completion.zsh"
 
 temp_dir=$(mktemp -d)
 trap "rm -rf $temp_dir" EXIT
 
-echo "Downloading git-completion.bash for v${git_version}..."
-if ! curl -fsSL "$bash_url" -o "$temp_dir/git-completion.bash"; then
+echo "Downloading authoritative git completion files"
+
+echo "- Downloading git-completion.bash for v${git_version}"
+if ! curl -fsSL "$bash_url" -o "$temp_dir/$bash_dest_name"; then
     echo ""
     echo "ERROR: Failed to download git-completion.bash"
     echo "  URL: $bash_url"
@@ -62,7 +67,7 @@ if ! curl -fsSL "$bash_url" -o "$temp_dir/git-completion.bash"; then
     exit 1
 fi
 
-echo "Downloading git-completion.zsh for v${git_version}..."
+echo "- Downloading git-completion.zsh for v${git_version}"
 if ! curl -fsSL "$zsh_url" -o "$temp_dir/git-completion.zsh"; then
     echo ""
     echo "ERROR: Failed to download git-completion.zsh"
@@ -70,11 +75,10 @@ if ! curl -fsSL "$zsh_url" -o "$temp_dir/git-completion.zsh"; then
     exit 1
 fi
 
-echo "Downloaded completion files for git v${git_version}"
+echo "- Downloaded completion files for v${git_version}"
 
-# ============================================================================
-# SECTION 3: DETECT ZSH COMPLETION DIRECTORY
-# ============================================================================
+# 3. DETECT ZSH COMPLETION DIRECTORY
+# ---
 
 detect_completion_dir() {
     local dirs=(
@@ -104,8 +108,7 @@ if [[ ! -d "$completion_dir" ]]; then
     }
 fi
 
-# ============================================================================
-# SECTION 4: GENERATE _git_timeline
+# 4. GENERATE _git_timeline
 #
 # '#compdef -' tells compinit to autoload this file as a function stub without
 # binding it to any command. This makes _git_timeline() available in $functions
@@ -154,10 +157,9 @@ fi
 # signatures and structure across all tested git versions (v2.40–v2.53).
 # The validation step below ensures any future structural change is caught
 # immediately rather than producing a silently broken completion.
-# ============================================================================
+# ---
 
-echo ""
-echo "Generating _git_timeline..."
+echo "Generating _git_timeline"
 
 cat > "$temp_dir/_git_timeline" << HEADER
 #compdef -
@@ -173,18 +175,20 @@ cat > "$temp_dir/_git_timeline" << HEADER
 # when completing 'git timeline --<TAB>'.
 #
 # Uses git's official zsh-to-bash bridge pattern from git-completion.zsh v${git_version}.
+# Sources git-completion-for-git-timeline.bash at completion time.
 
 # ---------------------------------------------------------------------------
 # Step 1: Source git-completion.bash
 #
 # \${\${(%):-%x}:h} is the directory containing this file.
-# git-completion.bash is installed alongside this file by install-completions.zsh.
+# git-completion-for-git-timeline.bash is installed alongside this file by
+# install-completions.zsh.
 # GIT_SOURCING_ZSH_COMPLETION=y tells git-completion.bash it is running in a
 # zsh context; 'complete' is neutralised so bash registration calls are no-ops.
 # ---------------------------------------------------------------------------
-local script="\${\${(%):-%x}:h}/git-completion.bash"
+local script="\${\${(%):-%x}:h}/git-completion-for-git-timeline.bash"
 if [[ ! -f "\$script" ]]; then
-    _message "git-completion.bash not found next to _git_timeline; run: make install-completions"
+    _message "git-completion-for-git-timeline.bash not found next to _git_timeline; run: make install-completions"
     return 1
 fi
 local old_complete="\$functions[complete]"
@@ -244,46 +248,23 @@ let cword=CURRENT-1
 emulate ksh -c _git_log
 FOOTER
 
-echo "Generated _git_timeline"
+echo "- Generated _git_timeline"
 
-# ============================================================================
-# SECTION 5: INSTALL FILES
-# ============================================================================
+# 5. INSTALL COMLETION FILES
+# ---
 
-echo ""
 echo "Installing to: $completion_dir"
 
-cp "$temp_dir/git-completion.bash" "$completion_dir/git-completion.bash" || {
-    echo "ERROR: Could not install git-completion.bash to $completion_dir"
+cp "$temp_dir/$bash_dest_name" "$completion_dir/$bash_dest_name" || {
+    echo "ERROR: Could not install $bash_dest_name to $completion_dir"
     exit 1
 }
-echo "  Installed: git-completion.bash"
+echo "- Installed: $bash_dest_name"
 
 cp "$temp_dir/_git_timeline" "$completion_dir/_git_timeline" || {
     echo "ERROR: Could not install _git_timeline to $completion_dir"
     exit 1
 }
-echo "  Installed: _git_timeline"
+echo "- Installed: _git_timeline"
 
-# ============================================================================
-# SECTION 6: SUMMARY
-# ============================================================================
-
-echo ""
-echo "=========================================="
-echo "Zsh completions installed successfully!"
-echo "=========================================="
-echo ""
-echo "Git version:    $git_version"
-echo "Installed to:   $completion_dir"
-echo ""
-echo "Files installed:"
-echo "  _git_timeline       (zsh completion for 'git timeline')"
-echo "  git-completion.bash (git's bash completion, sourced by _git_timeline)"
-echo ""
-echo "Next steps:"
-echo "  1. Restart your shell:  exec zsh"
-echo "  2. Try:                 git timeline --<TAB>"
-echo ""
 echo "To update completions after a git upgrade, re-run: make install-completions"
-echo ""

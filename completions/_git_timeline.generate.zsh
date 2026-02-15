@@ -14,7 +14,7 @@
 ## (already present on the system as part of a standard git install) and delegates to
 ## _git_log, giving identical completions to 'git log'.
 ##
-## Caveats:
+## Troubleshooting:
 ##
 ## If 'git timeline --<TAB>' completions do not work, add this line to ~/.zshrc:
 ##   zstyle ':completion:*:*:git:*' script \
@@ -23,9 +23,6 @@
 ## Running 'brew reinstall git' often fixes this — check its Caveats output for the
 ## completions directory. If git-completion.bash is not alongside _git, you need the
 ## zstyle line above.
-##
-## After upgrading Git, re-run to sync with the new version:
-##   zsh _git_timeline.generate.zsh > _git_timeline
 
 setopt ERR_EXIT
 
@@ -93,13 +90,6 @@ trap "rm -rf $temp_dir" EXIT
 if ! curl -fsSL "$zsh_url" -o "$temp_dir/git-completion.zsh" 2>/dev/null; then
     echo "ERROR: Failed to download git-completion.zsh" >&2
     echo "  URL: $zsh_url" >&2
-    echo "" >&2
-    echo "Possible causes:" >&2
-    echo "  - No internet connection" >&2
-    echo "  - Git version v${git_version} not found on GitHub" >&2
-    echo "    (Some OS-bundled git versions use non-standard version strings)" >&2
-    echo "" >&2
-    echo "Try: curl -I $zsh_url" >&2
     exit 1
 fi
 

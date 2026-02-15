@@ -1,9 +1,14 @@
 ## Uninstall Zsh completions for git-timeline.
+##
+## This script:
+## 1. Finds installed git-timeline completion files.
+## 2. Shows user which files will be deleted.
+## 3. Prompts for confirmation (y/n).
+## 4. Deletes files only if user confirms.
 
 # 1. SEARCH FOR COMPLETION FILES
 # ---
 
-# Search in standard locations
 local search_dirs=(
     "/opt/homebrew/share/zsh/site-functions"
     "/usr/share/zsh/site-functions"
@@ -17,9 +22,6 @@ for dir in "${search_dirs[@]}"; do
     if [[ -d "$dir" ]]; then
         if [[ -f "$dir/_git_timeline" ]]; then
             found_files+=("$dir/_git_timeline")
-        fi
-        if [[ -f "$dir/git-completion-for-git-timeline.bash" ]]; then
-            found_files+=("$dir/git-completion-for-git-timeline.bash")
         fi
     fi
 done
@@ -53,4 +55,16 @@ if ! read -q "?Continue? (y/N) "; then
     exit 0
 fi
 echo ""
+
+# 5. DELETE FILES
+# ---
+
+for file in "${found_files[@]}"; do
+    if rm -f "$file" 2>/dev/null; then
+        echo "Deleted: $file"
+    else
+        echo "Failed to delete: $file"
+    fi
+done
+
 echo "Completion files uninstalled successfully"

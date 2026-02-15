@@ -103,7 +103,12 @@ public class GitTimeline implements Callable<Integer> {
                         Display the version of git-timeline.
 
                     -P, --no-pager
-                        Disable paging.""");
+                        Disable paging.
+
+                    --sync-zsh-completions
+                        Update Zsh completion file. This is necessary when the installed
+                        Git version changes, e.g., after a Git upgrade. Use an env var:
+                          BREW=1    When git-timeline was installed with Homebrew.""");
         System.exit(0);
     }
 

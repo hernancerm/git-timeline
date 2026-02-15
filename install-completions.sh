@@ -222,8 +222,10 @@ cat >> "$temp_dir/_git-timeline" << 'FOOTER'
 # ---------------------------------------------------------------------------
 _git_timeline()
 {
-    emulate -L ksh
-
+    # Set up bash-style cursor variables while still in zsh context (1-indexed
+    # arrays). CURRENT is a zsh 1-based index; words[CURRENT] is the word
+    # under the cursor. These must be captured before any ksh emulation
+    # switches arrays to 0-indexed.
     local cur cword prev
     local __git_repo_path
     local __git_cmd_idx=1
@@ -232,7 +234,10 @@ _git_timeline()
     prev=${words[CURRENT-1]}
     let cword=CURRENT-1
 
-    _git_log
+    # Run _git_log in ksh emulation mode for bash compatibility.
+    # Using `emulate ksh -c` (not `emulate -L ksh` at function top) ensures
+    # the local variables set above are visible to _git_log as expected.
+    emulate ksh -c _git_log
 }
 
 _git_timeline

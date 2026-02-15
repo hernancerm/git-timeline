@@ -17,7 +17,7 @@
 ## (already present on the system as part of a standard git install) and delegates to
 ## _git_log, giving identical completions to 'git log'.
 ##
-## Re-running is safe. Re-run after a Git upgrade to update.
+## Re-running is safe, it ensures the completion file matches the installed Git version.
 
 setopt ERR_EXIT
 
@@ -233,5 +233,5 @@ if [[ "${BREW}" -eq 1 ]]; then
     echo "For example, the dir may be /opt/homebrew/share/zsh/site-functions, where both"
     echo "files should exist. If they don't, you need the zstyle line."
     echo ""
-    echo "After a git upgrade re-run: make install-completions"
+    echo "After upgrading Git run: git timeline --sync-zsh-completions"
 fi

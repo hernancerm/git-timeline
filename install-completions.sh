@@ -121,6 +121,40 @@ fi
 #   3. Set up bash-style cursor variables (cur/cword/prev) from zsh's 1-indexed
 #      CURRENT/words[] before ksh emulation switches arrays to 0-indexed
 #   4. Call _git_log via 'emulate ksh -c' for bash/ksh compatibility
+#
+# WHY WE EXTRACT __gitcomp* FROM git-completion.zsh RATHER THAN SOURCING IT
+# --------------------------------------------------------------------------
+# The natural alternative would be to simply source git-completion.zsh whole,
+# which would give us all the wrapper functions without any awk. We tried this
+# and it is not feasible for two reasons:
+#
+# 1. git-completion.zsh defines and then immediately calls _git() at the end
+#    of the file (the bare '_git' on the last line). That call is intentional
+#    when the file is installed *as* _git — it initialises the completion on
+#    autoload. But when sourced from inside _git_timeline(), _git() fires in
+#    the wrong context (wrong $service, wrong $words), producing errors like
+#    "_git:N: bad output format specification".
+#
+# 2. Neutralising that trailing call by saving/restoring $functions[_git]
+#    before and after sourcing does not work either. When _git is registered
+#    by compinit as an autoload stub (not yet sourced), $functions[_git]
+#    contains the internal marker string "builtin autoload -XU" rather than
+#    actual function body code. Restoring that string into $functions[_git]
+#    after sourcing causes "_git:1: command not found: [_git]" on subsequent
+#    completions.
+#
+# 3. Stripping the trailing _git call from the file before installing it
+#    still does not work because sourcing git-completion.zsh *defines* _git()
+#    as a function, which overwrites the user's existing _git (from Homebrew
+#    or the system). On the next 'git <TAB>', the wrong _git is called and
+#    produces "bad output format specification".
+#
+# The extraction approach is the only one that is fully side-effect-free:
+# we take only the __gitcomp* translation layer (7 small, stable functions)
+# and leave _git entirely untouched. These functions have had identical
+# signatures and structure across all tested git versions (v2.40–v2.53).
+# The validation step below ensures any future structural change is caught
+# immediately rather than producing a silently broken completion.
 # ============================================================================
 
 echo ""

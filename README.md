@@ -76,6 +76,19 @@ brew upgrade git-timeline
   [documentation of git-log](https://git-scm.com/docs/git-log#Documentation/git-log.txt---dateformat).
 - Pager command: Use the env var `GIT_PAGER`, `core.pager` from gitconfig or env var `PAGER`.
 
+## Completions
+
+Use a command below to sync the completions of `git timeline` when you upgrade Git.
+
+### Zsh
+
+If your Git is installed with Homebrew:
+
+```text
+curl -L https://raw.githubusercontent.com/hernancerm/git-timeline/refs/heads/main/completions/_git_timeline.generate.zsh \
+  | zsh /dev/stdin > $(brew --prefix)/share/zsh/site-functions/_git_timeline
+```
+
 ## Build from source
 
 The project is written in Java 25.

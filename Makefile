@@ -21,10 +21,3 @@ release:
 	$(NATIVE_IMAGE_MVN_CMD) -DskipTests
 	@cp -v target/git-timeline release
 
-.PHONY: install-completions-zsh
-install-completions-zsh:
-	zsh completions/install-completions.zsh
-
-.PHONY: uninstall-completions-zsh
-uninstall-completions-zsh:
-	zsh completions/uninstall-completions.zsh

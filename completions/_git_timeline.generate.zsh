@@ -1,12 +1,9 @@
-## Install Zsh completions for git-timeline.
+## Generate the _git_timeline Zsh completion file.
 ##
-## Usage: `BREW=1 zsh install-completions.zsh`
+## Usage: zsh _git_timeline.generate.zsh > _git_timeline
 ##
-## Installs _git_timeline to the zsh completion directory.
-##
-## - _git_timeline
-##   - Zsh completion function for 'git timeline'.
-##   - This script generates the _git_timeline completion file.
+## Outputs the generated _git_timeline completion function to stdout.
+## The caller is responsible for placing the file in a directory on $fpath.
 ##
 ## How 'git timeline --<Tab>' works:
 ##
@@ -17,7 +14,18 @@
 ## (already present on the system as part of a standard git install) and delegates to
 ## _git_log, giving identical completions to 'git log'.
 ##
-## Re-running is safe, it ensures the completion file matches the installed Git version.
+## Caveats:
+##
+## If 'git timeline --<TAB>' completions do not work, add this line to ~/.zshrc:
+##   zstyle ':completion:*:*:git:*' script \
+##     $(brew --prefix)/share/zsh/site-functions/git-completion.bash
+## The issue usually is that git-completion.bash is not in the same directory as _git.
+## Running 'brew reinstall git' often fixes this — check its Caveats output for the
+## completions directory. If git-completion.bash is not alongside _git, you need the
+## zstyle line above.
+##
+## After upgrading Git, re-run to sync with the new version:
+##   zsh _git_timeline.generate.zsh > _git_timeline
 
 setopt ERR_EXIT
 
@@ -25,46 +33,50 @@ setopt ERR_EXIT
 # ---
 
 if (( ! $+commands[git] )); then
-    echo "ERROR: git is not installed or not in PATH"
+    echo "ERROR: git is not installed or not in PATH" >&2
     exit 1
 fi
 
 # Strip OS-specific suffixes (e.g. "(Apple Git-130)" on macOS)
 git_version=$(git --version | sed 's/^git version //' | awk '{print $1}')
 if [[ -z "$git_version" ]]; then
-    echo "ERROR: Could not parse git version from 'git --version'"
+    echo "ERROR: Could not parse git version from 'git --version'" >&2
     exit 1
 fi
 
-echo "Detected git version: $git_version"
-
-# 2. DETECT ZSH COMPLETION DIRECTORY AND LOCATE git-completion.bash
+# 2. LOCATE git-completion.bash
 # ---
+# Determine the installation method from the git executable path, then check
+# the known candidate locations for that method. First match wins.
 
-local completion_dir=""
+git_path=$(which git)
 local bash_completion_script=""
 local zstyle_script=""
 
-if [[ "${BREW:-0}" == "1" ]]; then
-    if (( ! $+commands[brew] )); then
-        echo "ERROR: BREW=1 set but brew is not installed or not in PATH"
+if [[ "$git_path" == "$(brew --prefix)/bin/git" ]]; then
+    local brew_candidates=(
+        "$(brew --prefix)/share/zsh/site-functions/git-completion.bash"
+    )
+    for candidate in "${brew_candidates[@]}"; do
+        if [[ -f "$candidate" ]]; then
+            bash_completion_script="$candidate"
+            zstyle_script='$(brew --prefix)/share/zsh/site-functions/git-completion.bash'
+            break
+        fi
+    done
+    if [[ -z "$bash_completion_script" ]]; then
+        echo "ERROR: git-completion.bash not found. Searched:" >&2
+        for candidate in "${brew_candidates[@]}"; do
+            echo "  $candidate" >&2
+        done
+        echo "Try: brew reinstall git" >&2
         exit 1
     fi
-    completion_dir="$(brew --prefix)/share/zsh/site-functions"
-    local brew_bash="$(brew --prefix)/etc/bash_completion.d/git-completion.bash"
-    if [[ ! -f "$brew_bash" ]]; then
-        echo "ERROR: git-completion.bash not found at $brew_bash"
-        echo "Try: brew install git"
-        exit 1
-    fi
-    bash_completion_script="$brew_bash"
-    zstyle_script='$(brew --prefix)/etc/bash_completion.d/git-completion.bash'
 else
-    echo "ERROR: No environment variable set. Supported: BREW=1"
+    echo "ERROR: Unsupported git installation: $git_path" >&2
+    echo "Only Homebrew git is currently supported." >&2
     exit 1
 fi
-
-echo "Found git-completion.bash: $bash_completion_script"
 
 # 3. DOWNLOAD git-completion.zsh (temporary, for awk extraction only)
 # ---
@@ -78,32 +90,20 @@ zsh_url="${base_url}/git-completion.zsh"
 temp_dir=$(mktemp -d)
 trap "rm -rf $temp_dir" EXIT
 
-echo "Downloading git-completion.zsh for v${git_version} (temporary, for code extraction)"
-if ! curl -fsSL "$zsh_url" -o "$temp_dir/git-completion.zsh"; then
-    echo ""
-    echo "ERROR: Failed to download git-completion.zsh"
-    echo "  URL: $zsh_url"
-    echo ""
-    echo "Possible causes:"
-    echo "  - No internet connection"
-    echo "  - Git version v${git_version} not found on GitHub"
-    echo "    (Some OS-bundled git versions use non-standard version strings)"
-    echo ""
-    echo "Try: curl -I $zsh_url"
+if ! curl -fsSL "$zsh_url" -o "$temp_dir/git-completion.zsh" 2>/dev/null; then
+    echo "ERROR: Failed to download git-completion.zsh" >&2
+    echo "  URL: $zsh_url" >&2
+    echo "" >&2
+    echo "Possible causes:" >&2
+    echo "  - No internet connection" >&2
+    echo "  - Git version v${git_version} not found on GitHub" >&2
+    echo "    (Some OS-bundled git versions use non-standard version strings)" >&2
+    echo "" >&2
+    echo "Try: curl -I $zsh_url" >&2
     exit 1
 fi
 
-# 4. CREATE ZSH COMPLETION DIRECTORY IF NEEDED
-# ---
-
-if [[ ! -d "$completion_dir" ]]; then
-    mkdir -p "$completion_dir" || {
-        echo "ERROR: Could not create completion directory: $completion_dir"
-        exit 1
-    }
-fi
-
-# 5. GENERATE _git_timeline
+# 4. GENERATE _git_timeline (stdout)
 # ---
 # '#compdef -' tells compinit to autoload this file as a function stub without
 # binding it to any command. This makes _git_timeline() available in $functions
@@ -119,13 +119,11 @@ fi
 #      CURRENT/words[] before ksh emulation switches arrays to 0-indexed
 #   4. Call _git_log via 'emulate ksh -c' for bash/ksh compatibility
 
-echo "Generating _git_timeline"
-
-cat > "$temp_dir/_git_timeline" << HEADER
+cat << HEADER
 #compdef -
 
-# Auto-generated by install-completions.zsh — do not edit manually.
-# Regenerate with: make install-completions
+# Auto-generated by _git_timeline.generate.zsh — do not edit manually.
+# Regenerate with: zsh _git_timeline.generate.zsh > _git_timeline
 #
 # Git version: ${git_version}
 #
@@ -139,14 +137,13 @@ cat > "$temp_dir/_git_timeline" << HEADER
 # ---------------------------------------------------------------------------
 # Step 1: Source git-completion.bash
 #
-# Path resolved at install time to the git-completion.bash already present
-# on this system. GIT_SOURCING_ZSH_COMPLETION=y tells git-completion.bash it
-# is running in a zsh context; 'complete' is neutralised so bash registration
-# calls are no-ops.
+# Path evaluated at completion time. GIT_SOURCING_ZSH_COMPLETION=y tells
+# git-completion.bash it is running in a zsh context; 'complete' is
+# neutralised so bash registration calls are no-ops.
 # ---------------------------------------------------------------------------
-local script="${bash_completion_script}"
+local script="${zstyle_script}"
 if [[ ! -f "\$script" ]]; then
-    _message "git-completion.bash not found at \$script; run: make install-completions"
+    _message "git-completion.bash not found at \$script; run: zsh _git_timeline.generate.zsh > _git_timeline"
     return 1
 fi
 local old_complete="\$functions[complete]"
@@ -167,22 +164,21 @@ awk '
     /^__gitcomp \(\)/  { printing=1 }
     /^_git_zsh \(\)/   { exit }
     printing           { print }
-' "$temp_dir/git-completion.zsh" >> "$temp_dir/_git_timeline"
+' "$temp_dir/git-completion.zsh"
 
 # Validate that the expected wrapper functions were actually extracted.
 # If git ever renames or restructures these, fail loudly rather than silently
-# installing a broken completion file.
+# producing a broken completion file.
 for fn in __gitcomp __gitcomp_direct __gitcomp_nl __gitcomp_file; do
-    if ! grep -q "^${fn} ()" "$temp_dir/_git_timeline"; then
-        echo ""
-        echo "ERROR: Failed to extract ${fn}() from git-completion.zsh v${git_version}"
-        echo "  The structure of git-completion.zsh may have changed in this version."
-        echo "  Please file an issue at https://github.com/hernancerm/git-timeline"
+    if ! awk "/^${fn} \(\)/{found=1} END{exit !found}" "$temp_dir/git-completion.zsh"; then
+        echo "ERROR: Failed to extract ${fn}() from git-completion.zsh v${git_version}" >&2
+        echo "  The structure of git-completion.zsh may have changed in this version." >&2
+        echo "  Please file an issue at https://github.com/hernancerm/git-timeline" >&2
         exit 1
     fi
 done
 
-cat >> "$temp_dir/_git_timeline" << 'FOOTER'
+cat << 'FOOTER'
 
 # ---------------------------------------------------------------------------
 # Step 3: Entry point
@@ -205,34 +201,3 @@ let cword=CURRENT-1
 
 emulate ksh -c _git_log
 FOOTER
-
-echo "- Generated _git_timeline"
-
-# 6. INSTALL _git_timeline
-# ---
-
-echo "Installing to: $completion_dir"
-
-cp "$temp_dir/_git_timeline" "$completion_dir/_git_timeline" || {
-    echo "ERROR: Could not install _git_timeline to $completion_dir"
-    exit 1
-}
-echo "- Installed: _git_timeline"
-
-# 7. CAVEATS
-# ---
-
-if [[ "${BREW}" -eq 1 ]]; then
-    echo ""
-    echo "Caveats:"
-    echo ""
-    echo "If Git completions do not work then add this line to your ~/.zshrc"
-    echo "  zstyle ':completion:*:*:git:*' script ${zstyle_script}"
-    echo "The issue usually is that git-completion.bash is not in the same dir as _git."
-    echo "You may run 'brew reinstall git' and check in the Caveats the completions dir."
-    echo "For example, the dir may be /opt/homebrew/share/zsh/site-functions, where both"
-    echo "files should exist. If they don't, you need the zstyle line."
-    echo ""
-    echo "After upgrading Git, re-run this script to sync with the new Git version:"
-    echo "  BREW=1 zsh install-completions.zsh"
-fi

@@ -174,6 +174,19 @@ awk '
     printing           { print }
 ' "$temp_dir/git-completion.zsh" >> "$temp_dir/_git_timeline"
 
+# Validate that the expected wrapper functions were actually extracted.
+# If git ever renames or restructures these, fail loudly rather than silently
+# installing a broken completion file.
+for fn in __gitcomp __gitcomp_direct __gitcomp_nl __gitcomp_file; do
+    if ! grep -q "^${fn} ()" "$temp_dir/_git_timeline"; then
+        echo ""
+        echo "ERROR: Failed to extract ${fn}() from git-completion.zsh v${git_version}"
+        echo "  The structure of git-completion.zsh may have changed in this version."
+        echo "  Please file an issue at https://github.com/hernancerm/git-timeline"
+        exit 1
+    fi
+done
+
 cat >> "$temp_dir/_git_timeline" << 'FOOTER'
 
 # ---------------------------------------------------------------------------

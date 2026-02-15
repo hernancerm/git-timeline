@@ -1,7 +1,6 @@
-#!/bin/bash
 
 # ============================================================================
-# uninstall-completions.sh - Uninstall zsh completions for git-timeline
+# uninstall-completions.zsh - Uninstall zsh completions for git-timeline
 #
 # This script:
 # 1. Finds installed git-timeline completion files
@@ -14,21 +13,21 @@ echo "Looking for installed git-timeline completion files..."
 echo ""
 
 # Search in standard locations
-search_dirs=(
+local search_dirs=(
     "/opt/homebrew/share/zsh/site-functions"
     "/usr/share/zsh/site-functions"
     "/usr/local/share/zsh/site-functions"
     "$HOME/.zsh/completions"
 )
 
-found_files=()
+local found_files=()
 
 for dir in "${search_dirs[@]}"; do
-    if [ -d "$dir" ]; then
-        if [ -f "$dir/_git_timeline" ]; then
+    if [[ -d "$dir" ]]; then
+        if [[ -f "$dir/_git_timeline" ]]; then
             found_files+=("$dir/_git_timeline")
         fi
-        if [ -f "$dir/git-completion.bash" ]; then
+        if [[ -f "$dir/git-completion.bash" ]]; then
             found_files+=("$dir/git-completion.bash")
         fi
     fi
@@ -38,7 +37,7 @@ done
 # CHECK IF FILES WERE FOUND
 # ============================================================================
 
-if [ ${#found_files[@]} -eq 0 ]; then
+if (( ${#found_files[@]} == 0 )); then
     echo "No git-timeline completion files found."
     echo ""
     echo "Searched in:"
@@ -66,13 +65,12 @@ echo ""
 
 echo "This will DELETE the files listed above."
 echo ""
-read -p "Continue? (y/N) " -n 1 -r response
-echo ""
-
-if [[ ! "$response" =~ ^[Yy]$ ]]; then
+if ! read -q "?Continue? (y/N) "; then
+    echo ""
     echo "Cancelled. No files were deleted."
     exit 0
 fi
+echo ""
 
 # ============================================================================
 # DELETE FILES

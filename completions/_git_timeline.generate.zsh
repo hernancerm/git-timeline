@@ -16,13 +16,19 @@
 ##
 ## Troubleshooting:
 ##
-## If 'git timeline --<TAB>' completions do not work, add this line to ~/.zshrc:
-##   zstyle ':completion:*:*:git:*' script \
-##     $(brew --prefix)/share/zsh/site-functions/git-completion.bash
-## The issue usually is that git-completion.bash is not in the same directory as _git.
-## Running 'brew reinstall git' often fixes this — check its Caveats output for the
-## completions directory. If git-completion.bash is not alongside _git, you need the
-## zstyle line above.
+## If 'git timeline --<TAB>' completions do not work, the issue is usually that
+## git-completion.bash is not in the same directory as _git. Add a zstyle to
+## ~/.zshrc pointing to the correct path for your git installation:
+##
+##   Homebrew (macOS):
+##     zstyle ':completion:*:*:git:*' script \
+##       $(brew --prefix)/share/zsh/site-functions/git-completion.bash
+##     Running 'brew reinstall git' often fixes this — check its Caveats output
+##     for the completions directory.
+##
+##   System Git (Ubuntu/Debian/Fedora/Arch):
+##     zstyle ':completion:*:*:git:*' script \
+##       /usr/share/bash-completion/completions/git
 
 setopt ERR_EXIT
 
@@ -43,8 +49,9 @@ fi
 
 # 2. LOCATE git-completion.bash
 # ---
-# Determine the installation method from the git executable path, then check
-# the known candidate locations for that method. First match wins.
+# Determine the installation from the git executable path. For Homebrew, check
+# the known Homebrew location. For all other git installs, probe a list of
+# generic candidate locations. First match wins.
 
 git_path=$(which git)
 local bash_completion_script=""
@@ -70,9 +77,27 @@ if [[ "$git_path" == "$(brew --prefix)/bin/git" ]]; then
         exit 1
     fi
 else
-    echo "ERROR: Unsupported git installation: $git_path" >&2
-    echo "Only Homebrew git is currently supported." >&2
-    exit 1
+    local generic_candidates=(
+        # Ubuntu/Debian/Fedora/Arch (apt, dnf, pacman).
+        "/usr/share/bash-completion/completions/git"
+        # Manual install.
+        "/usr/local/share/bash-completion/completions/git"
+        "/usr/local/share/bash-completion/completions/git-completion.bash"
+    )
+    for candidate in "${generic_candidates[@]}"; do
+        if [[ -f "$candidate" ]]; then
+            bash_completion_script="$candidate"
+            git_completion_bash_filepath="$candidate"
+            break
+        fi
+    done
+    if [[ -z "$bash_completion_script" ]]; then
+        echo "ERROR: git-completion.bash not found. Searched:" >&2
+        for candidate in "${generic_candidates[@]}"; do
+            echo "  $candidate" >&2
+        done
+        exit 1
+    fi
 fi
 
 # 3. DOWNLOAD git-completion.zsh (temporary, for awk extraction only)

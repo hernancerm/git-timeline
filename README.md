@@ -91,6 +91,10 @@ curl -L https://raw.githubusercontent.com/hernancerm/git-timeline/refs/heads/mai
   | zsh /dev/stdin > $(brew --prefix)/share/zsh/site-functions/_git_timeline
 ```
 
+If your Git is not installed through Homebrew, just change the destination file to something in your FPATH.
+
+For Ubuntu, you might need to create a `_git-timeline` instead of a `_git_timeline`.
+
 ## Build from source
 
 The project is written in Java 25.

@@ -54,57 +54,40 @@ fi
 # generic candidate locations. First match wins.
 
 git_path=$(which git)
-local bash_completion_script=""
 local git_completion_bash_filepath=""
+local candidates=()
 
-if [[ "$git_path" == "$(brew --prefix)/bin/git" ]]; then
-    local brew_candidates=(
+if (( $+commands[brew] )) && [[ "$git_path" == "$(brew --prefix)/bin/git" ]]; then
+    candidates=(
         "$(brew --prefix)/share/zsh/site-functions/git-completion.bash"
     )
-    for candidate in "${brew_candidates[@]}"; do
-        if [[ -f "$candidate" ]]; then
-            bash_completion_script="$candidate"
-            git_completion_bash_filepath='$(brew --prefix)/share/zsh/site-functions/git-completion.bash'
-            break
-        fi
-    done
-    if [[ -z "$bash_completion_script" ]]; then
-        echo "ERROR: git-completion.bash not found. Searched:" >&2
-        for candidate in "${brew_candidates[@]}"; do
-            echo "  $candidate" >&2
-        done
-        echo "Try: brew reinstall git" >&2
-        exit 1
-    fi
 else
-    local generic_candidates=(
-        # Ubuntu/Debian/Fedora/Arch (apt, dnf, pacman).
-        "/usr/share/bash-completion/completions/git"
-        # Manual install.
-        "/usr/local/share/bash-completion/completions/git"
-        "/usr/local/share/bash-completion/completions/git-completion.bash"
+    candidates=(
+        "/usr/share/bash-completion/completions/git" # apt, dnf, pacman
+        "/usr/local/share/bash-completion/completions/git" # Manual install
+        "/usr/local/share/bash-completion/completions/git-completion.bash" # Manual install
     )
-    for candidate in "${generic_candidates[@]}"; do
-        if [[ -f "$candidate" ]]; then
-            bash_completion_script="$candidate"
-            git_completion_bash_filepath="$candidate"
-            break
-        fi
-    done
-    if [[ -z "$bash_completion_script" ]]; then
-        echo "ERROR: git-completion.bash not found. Searched:" >&2
-        for candidate in "${generic_candidates[@]}"; do
-            echo "  $candidate" >&2
-        done
-        exit 1
+fi
+
+for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+        git_completion_bash_filepath="$candidate"
+        break
     fi
+done
+if [[ -z "$git_completion_bash_filepath" ]]; then
+    echo "ERROR: git-completion.bash not found. Searched:" >&2
+    for candidate in "${candidates[@]}"; do
+        echo "  $candidate" >&2
+    done
+    exit 1
 fi
 
 # 3. DOWNLOAD git-completion.zsh (temporary, for awk extraction only)
 # ---
-# git-completion.zsh is not installed locally by Homebrew. We download it
-# temporarily to extract the __gitcomp* wrapper functions via awk. The file
-# is cleaned up on exit and never installed anywhere.
+# git-completion.zsh is not installed locally by any standard git package.
+# We download it temporarily to extract the __gitcomp* wrapper functions via
+# awk. The file is cleaned up on exit and never installed anywhere.
 
 base_url="https://raw.githubusercontent.com/git/git/v${git_version}/contrib/completion"
 zsh_url="${base_url}/git-completion.zsh"

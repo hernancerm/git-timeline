@@ -109,9 +109,13 @@ GraalVM Native Image is used to compile Java to a native binary.
 
     Either do it manually through the website: https://www.graalvm.org/downloads/
 
-    Or use SDKMAN! (https://sdkman.io/): `sdk install java 25.0.2-graal`
+    Or use mise (https://mise.jdx.dev): `mise install java@graalvm-community-25.0.2`
 
-2. Set the env vars `JAVA_HOME` and `GRAALVM_HOME` (same value as JAVA_HOME).
+    Or use SDKMAN! (https://sdkman.io): `sdk install java 25.0.2-graal`
+
+2. Ensure the JDK used is the GraalVM JDK. The output of `java -version` should contain GraalVM.
+
+   Otherwise, set the env var `GRAALVM_HOME` to point to your GraalVM JDK.
 
 3. On a clone of this repo run `make bin`.
 

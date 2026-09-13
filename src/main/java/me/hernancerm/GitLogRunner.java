@@ -7,14 +7,17 @@ import static org.jline.jansi.Ansi.ansi;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
-import java.util.stream.Stream;
 
 /** Runs git-log and writes every line of it, formatted, to the sink. */
 public class GitLogRunner {
+
+    // Dropped when the user picks the format, since the date belongs to the format.
+    private static final String DATE_FORMAT = "--date=format:%b-%d-%Y";
 
     // How long git-log gets to exit once its output has run out or it has been destroyed.
     private static final int EXIT_TIMEOUT_MILLIS = 500;
@@ -96,14 +99,38 @@ public class GitLogRunner {
         return PagerSink.open(corePagerLookup);
     }
 
-    private List<String> getGitLogCommand(GitLogArgs args) {
-        return Stream.concat(Stream.of(
-                        "git",
-                        "log",
-                        args.isColorEnabled() ? "--color=always" : "--color=never",
-                        "--date=format:%b-%d-%Y",
-                        "--pretty=format:" + CommitLineParser.PRETTY_FORMAT),
-                Arrays.stream(args.unparsedArgs())
-                        .map(CommitLineParser::stripDelimiter)).toList();
+    static List<String> getGitLogCommand(GitLogArgs args) {
+        List<String> command = new ArrayList<>(List.of(
+                "git",
+                "log",
+                args.isColorEnabled() ? "--color=always" : "--color=never",
+                "--pretty=format:" + CommitLineParser.PRETTY_FORMAT));
+
+        // The date format is part of the line format, so a user supplied format has to take
+        // the date with it. Forcing ours left `--pretty=medium` showing a date git-log would
+        // never print there.
+        if (!replacesTheFormat(args.unparsedArgs())) {
+            command.add(DATE_FORMAT);
+        }
+
+        Arrays.stream(args.unparsedArgs())
+                .map(CommitLineParser::stripDelimiter)
+                .forEach(command::add);
+
+        return command;
+    }
+
+    private static boolean replacesTheFormat(String[] unparsedArgs) {
+        for (String arg : unparsedArgs) {
+            // Everything past `--` is a path, so a file named like an option is not one.
+            if (arg.equals("--")) {
+                return false;
+            }
+            if (arg.equals("--pretty") || arg.startsWith("--pretty=")
+                    || arg.equals("--format") || arg.startsWith("--format=")) {
+                return true;
+            }
+        }
+        return false;
     }
 }

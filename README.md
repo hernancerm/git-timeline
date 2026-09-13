@@ -26,13 +26,13 @@ git-timeline has very few additional options. Learn them through `git timeline -
 - Commit hashes, PR numbers and issue numbers are formatted as [hyperlinks (OSC 8)](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) to the hosting provider.
 - Indication of some commit characteristics: An asterisk next to the hash means the commit is a merge; next
   to the author name means the author and committer have different names.
-- One-line format including date (%ad) and author (%an).
-- Pass-through of all opts/args to git-log.
-- Works with [`--graph`](https://git-scm.com/docs/git-log#Documentation/git-log.txt---graph).
+- One-line format including date (`%ad`) and author (`%an`).
+- Pass-through of all opts/args to git-log. Notable mentions:
+  - [`--pretty`](https://git-scm.com/docs/git-log#Documentation/git-log.txt---prettyformat) and [`--format`](https://git-scm.com/docs/git-log#Documentation/git-log.txt---prettyformat) take over the commit format.
+  - Works with [`--graph`](https://git-scm.com/docs/git-log#Documentation/git-log.txt---graph).
 
 ## Limitations
 
-- `--pretty` and `--format` replace the format of git-timeline, so commits render as plain git-log output.
 - Not tested in any way in Windows.
 
 ## Installation

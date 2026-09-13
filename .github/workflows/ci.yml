@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+
+jobs:
+
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v6.0.2
+      - name: Cache Maven
+        # Holds both the Maven the wrapper downloads and every dependency and plugin.
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('pom.xml', '.mvn/wrapper/maven-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-maven-
+      - name: Install Mise and Java
+        # https://github.com/jdx/mise-action
+        uses: jdx/mise-action@v4
+        with:
+          mise_toml: |
+            [tools]
+            java = "graalvm-community-25.0.2"
+      - name: Run tests
+        run: make test

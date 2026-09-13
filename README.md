@@ -127,6 +127,19 @@ Running `brew reinstall git` often fixes this. Check its Caveats output for the 
 directory. On other systems the file is usually at
 `/usr/share/bash-completion/completions/git`.
 
+## Performance
+
+Measured on the [vim](https://github.com/vim/vim) repo (24,475 commits) with
+[hyperfine](https://github.com/sharkdp/hyperfine) on an Apple M4 Pro. Used the mean of >=20 runs:
+
+| Command | Native binary | Uber JAR |
+| --- | --- | --- |
+| `git-timeline --color=always -1 > /dev/null` (startup) | 47 ms | 106 ms |
+| `git-timeline --color=always --no-pager > /dev/null` (whole history) | 205 ms | 303 ms |
+| `git-timeline --color=always --no-pager --graph > /dev/null` | 212 ms | 311 ms |
+
+Startup is the most significant figure in normal daily use.
+
 ## Build from source
 
 The project is written in Java 25.

@@ -1,8 +1,18 @@
 # git-timeline
 
-Timeline is a **drop-in replacement** for git-log which improves the readability of its output.
+Timeline is a **drop-in replacement** for git-log which improves the readability of its output. Example:
 
-<img src="./assets/git-timeline.png">
+```
+...
+e8bd7843* Feb-28-2026  Hernán Cervera* Merge pull request #382 from hernancerm/xyz-8.2
+a1de8921  Jan-11-2026  Hernán Cervera  docs: clean up README.md
+...
+```
+
+- The commit hashes and the PR numbers are clickable (via OSC 8 hyperlinks).
+- `*` appended to the commit's hash means that the commit is a merge.
+- `*` appended to the author means that it differs from the committer.
+
 
 ## Usage
 
@@ -13,12 +23,12 @@ Timeline has very few additional options. Learn them through `git timeline -h`.
 
 ## Features
 
-- Commit hashes, PR numbers and issue numbers are formatted as terminal
-  [hyperlinks](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) to the hosting provider.
+- Commit hashes, PR numbers and issue numbers are formatted as [hyperlinks (OSC 8)](https://gist.github.com/egmontkob/eb114294efbcd5adb1944c9f3cb5feda) to the hosting provider.
 - Indication of some commit characteristics: An asterisk next to the hash means the commit is a merge; next
   to the author name means the author and committer have different names.
 - One-line format including date (%ad) and author (%an).
 - Pass-through of all opts/args to git-log.
+- Works with [`--graph`](https://git-scm.com/docs/git-log#Documentation/git-log.txt---graph).
 
 ## Limitations
 

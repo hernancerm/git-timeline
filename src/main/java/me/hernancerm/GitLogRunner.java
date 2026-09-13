@@ -16,6 +16,13 @@ import java.util.stream.Stream;
 /** Runs git-log and writes every line of it, formatted, to the sink. */
 public class GitLogRunner {
 
+    // How long git-log gets to exit once its output has run out or it has been destroyed.
+    private static final int EXIT_TIMEOUT_MILLIS = 500;
+
+    // What a shell reports for a process killed by SIGTERM (128 + 15), which is the signal
+    // destroy() sends.
+    private static final int SIGTERM_EXIT_CODE = 143;
+
     public int run(GitLogArgs args, BiFunction<GitCommit, GitRemote, String> commitFormatter)
             throws IOException, InterruptedException {
 
@@ -67,8 +74,19 @@ public class GitLogRunner {
             }
         }
 
-        process.waitFor(500, TimeUnit.MILLISECONDS);
-        return process.exitValue();
+        return waitForExitCode(process);
+    }
+
+    // exitValue() throws while the process is still running, so the wait has to succeed
+    // before asking. Only the destroy above can leave git-log running this long, and it
+    // reports SIGTERM whether it obeys in time or has to be killed outright.
+    static int waitForExitCode(Process process) throws InterruptedException {
+        if (process.waitFor(EXIT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
+            return process.exitValue();
+        }
+
+        process.destroyForcibly();
+        return SIGTERM_EXIT_CODE;
     }
 
     private OutputSink openSink(GitLogArgs args, GitQuery corePagerLookup) throws IOException {

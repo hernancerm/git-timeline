@@ -138,7 +138,16 @@ Measured on the [vim](https://github.com/vim/vim) repo (24,475 commits) with
 | `git-timeline --color=always --no-pager > /dev/null` (whole history) | 205 ms | 303 ms |
 | `git-timeline --color=always --no-pager --graph > /dev/null` | 212 ms | 311 ms |
 
-Startup is the most significant figure in normal daily use.
+For reference, the same runs against `git log` itself, where `<fields>` is
+`--date=format:%b-%d-%Y --pretty=format:'%H %h %p %C(auto)%d %cn %an %ad %s'`:
+
+| Command | git log |
+| --- | --- |
+| `git log --color=always <fields> -1 > /dev/null` (startup) | 36 ms |
+| `git log --color=always <fields> > /dev/null` (whole history) | 178 ms |
+| `git log --color=always <fields> --graph > /dev/null` | 183 ms |
+
+Startup is the most impactful figure in normal daily use.
 
 ## Build from source
 

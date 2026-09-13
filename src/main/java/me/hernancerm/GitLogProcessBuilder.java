@@ -2,15 +2,13 @@ package me.hernancerm;
 
 import static org.jline.jansi.Ansi.ansi;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -45,7 +43,7 @@ public class GitLogProcessBuilder {
     private static final Pattern REMOTE_URL = Pattern.compile(
             "^(?:(?:ssh|git|https?|ftps?)://)?(?:[^@/]+@)?([^/:]+)(?::\\d+)?[:/](.+)/([^/]+?)(?:[.]git)?/?$");
 
-    public int start(GitLogArgs args, Function<GitCommit, String> commitFormatter)
+    public int start(GitLogArgs args, BiFunction<GitCommit, GitRemote, String> commitFormatter)
             throws IOException, InterruptedException {
 
         // Launch the git lookups before anything reads them. ProcessBuilder.start() does not
@@ -60,92 +58,51 @@ public class GitLogProcessBuilder {
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         Process process = processBuilder.start();
 
-        Process pagerProcess;
-        PrintWriter pagerWriter;
-        if (args.isPagerEnabled()) {
-            ProcessBuilder pagerProcessBuilder =
-                    new ProcessBuilder(getPagerCommand(gitCorePagerProcess));
-            pagerProcessBuilder.redirectOutput(ProcessBuilder.Redirect.INHERIT);
-            pagerProcessBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
-
-            pagerProcess = pagerProcessBuilder.start();
-            pagerWriter = new PrintWriter(new BufferedOutputStream(
-                            pagerProcess.getOutputStream()), false);
-        } else {
-            pagerProcess = null;
-            pagerWriter = null;
-        }
-
-        // Stdout.
-        try (
-                var inputStreamReader = new InputStreamReader(process.getInputStream());
-                var bufferedReader = new BufferedReader(inputStreamReader)
-        ) {
-            String line;
-            GitCommit commit = new GitCommit();
+        // Closing the sink is what starts the pager's interactive mode, so it has to happen
+        // after the read loop is done.
+        try (OutputSink sink = openSink(args, gitCorePagerProcess)) {
             // Null when color is off, which leaves every hyperlink out of the output anyway.
             GitRemote gitRemote = parseRemoteUrl(
                     readFirstLine(gitRemoteProcess, "remote url for: origin"));
-            while ((line = bufferedReader.readLine()) != null) {
 
-                // Fixes delay after user quits pager (e.g., press 'q' in less) on big repos.
-                if (args.isPagerEnabled()) {
-                    if (pagerProcess == null) {
-                        throw new IllegalStateException(
-                                "The pager process must not be null when the pager is enabled");
-                    }
-                    if (!pagerProcess.isAlive()) {
-                        // Pager has terminated, kill the git-log process.
+            try (
+                    var inputStreamReader = new InputStreamReader(process.getInputStream());
+                    var bufferedReader = new BufferedReader(inputStreamReader)
+            ) {
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+
+                    // Fixes delay after user quits pager (e.g., press 'q' in less) on big repos.
+                    if (!sink.isOpen()) {
                         process.destroy();
                         break;
                     }
-                }
 
-                String[] parts = splitCommitLine(line);
-                if (parts != null) {
-                    populateCommit(parts, commit);
-                    commit.setRemote(gitRemote);
-                    commit.setArgs(args);
-                    // parts[0] holds the prefixes of the git-log option `--graph`.
-                    // Example prefixes in this case: `* <commit>`, `| * <commit>`.
-                    println(args, pagerWriter, ansi().render(
-                            parts[0] + commitFormatter.apply(commit)).toString());
-                    commit.reset();
-                } else {
-                    // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
-                    // just connectors, like `|\` or `|\|`. Anything else git-log emits that does not
-                    // match PRETTY_FORMAT also lands here and is passed through untouched.
-                    println(args, pagerWriter, ansi().render(line).toString());
+                    String[] parts = splitCommitLine(line);
+                    if (parts != null) {
+                        // parts[0] holds the prefixes of the git-log option `--graph`.
+                        // Example prefixes in this case: `* <commit>`, `| * <commit>`.
+                        sink.println(ansi().render(parts[0]
+                                + commitFormatter.apply(toCommit(parts), gitRemote)).toString());
+                    } else {
+                        // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
+                        // just connectors, like `|\` or `|\|`. Anything else git-log emits that does not
+                        // match PRETTY_FORMAT also lands here and is passed through untouched.
+                        sink.println(ansi().render(line).toString());
+                    }
                 }
             }
-        }
-
-        if (args.isPagerEnabled()) {
-            if (pagerWriter == null) {
-                throw new IllegalStateException(
-                        "The pager writer must not be null when the pager is enabled");
-            }
-            // Close the writer to signal EOF to the pager (less). Starts interactive mode.
-            pagerWriter.close();
-            // Wait for the pager (less) to finish (interactive mode).
-            pagerProcess.waitFor();
         }
 
         process.waitFor(500, TimeUnit.MILLISECONDS);
         return process.exitValue();
     }
 
-    private void println(GitLogArgs args, PrintWriter pagerWriter, String line) {
-        if (args.isPagerEnabled()) {
-            if (pagerWriter == null) {
-                throw new IllegalStateException(
-                        "The pager writer must not be null when the pager is enabled");
-            }
-            pagerWriter.println(line);
-            pagerWriter.flush();
-        } else {
-            System.out.println(line);
+    private OutputSink openSink(GitLogArgs args, Process gitCorePagerProcess) throws IOException {
+        if (!args.isPagerEnabled()) {
+            return new StdoutSink();
         }
+        return PagerSink.start(getPagerCommand(gitCorePagerProcess));
     }
 
     // Documentation for precedence of pager command source:
@@ -244,15 +201,16 @@ public class GitLogProcessBuilder {
         return parts.length == PART_COUNT ? parts : null;
     }
 
-    static void populateCommit(String[] parts, GitCommit commit) {
-        commit.setFullHash(parts[1]);
-        commit.setAbbreviatedHash(parts[2]);
-        commit.setAbbreviatedParentHashes(parts[3].split("\\s"));
-        commit.setRefNamesColored(parts[4]);
-        commit.setCommitterName(parts[5]);
-        commit.setAuthorName(parts[6]);
-        commit.setAuthorDate(parts[7]);
-        commit.setSubjectLine(parts[8]);
+    static GitCommit toCommit(String[] parts) {
+        return new GitCommit(
+                parts[1],
+                parts[2],
+                parts[3].split("\\s"),
+                parts[4],
+                parts[5],
+                parts[6],
+                parts[7],
+                parts[8]);
     }
 
     private List<String> getGitLogCommand(GitLogArgs args) {

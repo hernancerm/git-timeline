@@ -1,31 +1,11 @@
 package me.hernancerm;
 
-import lombok.Data;
-
-@Data
-public class GitCommit {
-
-    private String fullHash;
-    private String abbreviatedHash;
-    private String[] abbreviatedParentHashes;
-    private String authorName;
-    private String authorDate;
-    private String committerName;
-    private String subjectLine;
-    private String refNamesColored;
-    private GitRemote remote;
-    private GitLogArgs args;
-
-    public void reset() {
-        fullHash = null;
-        abbreviatedHash = null;
-        abbreviatedParentHashes = null;
-        authorName = null;
-        authorDate = null;
-        committerName = null;
-        subjectLine = null;
-        refNamesColored = null;
-        remote = null;
-        args = null;
-    }
-}
+public record GitCommit(
+        String fullHash,
+        String abbreviatedHash,
+        String[] abbreviatedParentHashes,
+        String refNamesColored,
+        String committerName,
+        String authorName,
+        String authorDate,
+        String subjectLine) {}

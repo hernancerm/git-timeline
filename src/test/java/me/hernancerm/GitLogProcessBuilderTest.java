@@ -2,8 +2,8 @@ package me.hernancerm;
 
 import static me.hernancerm.GitLogProcessBuilder.DELIMITER;
 import static me.hernancerm.GitLogProcessBuilder.parseRemoteUrl;
-import static me.hernancerm.GitLogProcessBuilder.populateCommit;
 import static me.hernancerm.GitLogProcessBuilder.splitCommitLine;
+import static me.hernancerm.GitLogProcessBuilder.toCommit;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
@@ -30,21 +30,19 @@ class GitLogProcessBuilderTest {
     private static GitCommit parse(String line) {
         String[] parts = splitCommitLine(line);
         assertNotNull(parts, "Expected the line to carry commit data");
-        GitCommit commit = new GitCommit();
-        populateCommit(parts, commit);
-        return commit;
+        return toCommit(parts);
     }
 
     @Test
     void splitCommitLine_givenPlainCommit_thenPopulateEveryField() {
         GitCommit commit = parse(line("", "", "Hernan Cervera", "Dec-31-2025", "Test commit"));
 
-        assertEquals(FULL_HASH, commit.getFullHash());
-        assertEquals(ABBREVIATED_HASH, commit.getAbbreviatedHash());
-        assertArrayEquals(new String[]{"0816af9"}, commit.getAbbreviatedParentHashes());
-        assertEquals("Hernan Cervera", commit.getAuthorName());
-        assertEquals("Dec-31-2025", commit.getAuthorDate());
-        assertEquals("Test commit", commit.getSubjectLine());
+        assertEquals(FULL_HASH, commit.fullHash());
+        assertEquals(ABBREVIATED_HASH, commit.abbreviatedHash());
+        assertArrayEquals(new String[]{"0816af9"}, commit.abbreviatedParentHashes());
+        assertEquals("Hernan Cervera", commit.authorName());
+        assertEquals("Dec-31-2025", commit.authorDate());
+        assertEquals("Test commit", commit.subjectLine());
     }
 
     @Test
@@ -75,9 +73,9 @@ class GitLogProcessBuilderTest {
         String subjectLine = "evil " + DELIMITER + " tail";
         GitCommit commit = parse(line("", "", "Hernan Cervera", "Dec-31-2025", subjectLine));
 
-        assertEquals(subjectLine, commit.getSubjectLine());
-        assertEquals("Dec-31-2025", commit.getAuthorDate());
-        assertEquals(FULL_HASH, commit.getFullHash());
+        assertEquals(subjectLine, commit.subjectLine());
+        assertEquals("Dec-31-2025", commit.authorDate());
+        assertEquals(FULL_HASH, commit.fullHash());
     }
 
     @Test
@@ -86,7 +84,7 @@ class GitLogProcessBuilderTest {
         String subjectLine = "evil </hernancerm.git-timeline.subject-line> tail";
         GitCommit commit = parse(line("", "", "Hernan Cervera", "Dec-31-2025", subjectLine));
 
-        assertEquals(subjectLine, commit.getSubjectLine());
+        assertEquals(subjectLine, commit.subjectLine());
     }
 
     @Test
@@ -96,9 +94,9 @@ class GitLogProcessBuilderTest {
         String refNames = " (HEAD -> main, x</hernancerm.git-timeline.ref-names-colored>y)";
         GitCommit commit = parse(line("", refNames, "Hernan Cervera", "Dec-31-2025", "Test commit"));
 
-        assertEquals(refNames, commit.getRefNamesColored());
-        assertEquals("Hernan Cervera", commit.getAuthorName());
-        assertEquals("Test commit", commit.getSubjectLine());
+        assertEquals(refNames, commit.refNamesColored());
+        assertEquals("Hernan Cervera", commit.authorName());
+        assertEquals("Test commit", commit.subjectLine());
     }
 
     @Test
@@ -108,9 +106,9 @@ class GitLogProcessBuilderTest {
         String authorName = "EVIL\u001FNAME";
         GitCommit commit = parse(line("", "", authorName, "Dec-31-2025", "Test commit"));
 
-        assertEquals(authorName, commit.getAuthorName());
-        assertEquals("Dec-31-2025", commit.getAuthorDate());
-        assertEquals("Test commit", commit.getSubjectLine());
+        assertEquals(authorName, commit.authorName());
+        assertEquals("Dec-31-2025", commit.authorDate());
+        assertEquals("Test commit", commit.subjectLine());
     }
 
     @Test
@@ -125,7 +123,7 @@ class GitLogProcessBuilderTest {
                 + DELIMITER + "Merge pull request #382";
         GitCommit commit = parse(line);
 
-        assertArrayEquals(new String[]{"0816af9", "1a2b3c4"}, commit.getAbbreviatedParentHashes());
+        assertArrayEquals(new String[]{"0816af9", "1a2b3c4"}, commit.abbreviatedParentHashes());
     }
 
     @Test

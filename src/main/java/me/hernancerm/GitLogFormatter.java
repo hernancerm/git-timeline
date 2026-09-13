@@ -8,30 +8,31 @@ import java.util.Objects;
 
 public class GitLogFormatter {
 
-    public String format(GitCommit c) {
-        boolean isMergeCommit = c.getAbbreviatedParentHashes().length > 1;
-        boolean authorDiffersFromCommitter = !c.getAuthorName().equals(c.getCommitterName());
+    // The remote is null when there is none or color is off, which leaves every hyperlink out.
+    public String format(GitCommit c, GitRemote r) {
+        boolean isMergeCommit = c.abbreviatedParentHashes().length > 1;
+        boolean authorDiffersFromCommitter = !c.authorName().equals(c.committerName());
         return ansi().render(
                         (isMergeCommit ? "@|bold,yellow " : "@|yellow ")
-                                + (c.getRemote() != null
-                                        ? hyperlinkToCommit(c.getRemote(), c.getFullHash(), c.getAbbreviatedHash())
-                                        : c.getAbbreviatedHash())
+                                + (r != null
+                                        ? hyperlinkToCommit(r, c.fullHash(), c.abbreviatedHash())
+                                        : c.abbreviatedHash())
                                 + (isMergeCommit ? "*" : " ")
                                 + "|@ "
                         + "@|green "
-                                + c.getAuthorDate()
+                                + c.authorDate()
                                 + "|@  "
                         + (authorDiffersFromCommitter ? "@|bold,cyan " : "@|cyan ")
-                                + c.getAuthorName()
+                                + c.authorName()
                                 + (authorDiffersFromCommitter ? "*" : " ")
                                 + "|@"
-                        + ((c.getRemote() != null && BITBUCKET_ORG.equals(c.getRemote().platform())
-                                ? AnsiUtils.hyperlinkJiraIssues(c.getRemote().ownerName(), c.getRefNamesColored())
-                                : c.getRefNamesColored()))
+                        + ((r != null && BITBUCKET_ORG.equals(r.platform())
+                                ? AnsiUtils.hyperlinkJiraIssues(r.ownerName(), c.refNamesColored())
+                                : c.refNamesColored()))
                         + " "
-                        + (c.getRemote() != null
-                                ? hyperlinkSubjectLine(c.getRemote(), c.getSubjectLine())
-                                : c.getSubjectLine()
+                        + (r != null
+                                ? hyperlinkSubjectLine(r, c.subjectLine())
+                                : c.subjectLine()
                         )).toString();
     }
 

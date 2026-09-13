@@ -1,3 +1,7 @@
+<a href="https://github.com/hernancerm/git-timeline/actions/workflows/ci.yml" target="_blank">
+  <img src="https://github.com/hernancerm/git-timeline/actions/workflows/ci.yml/badge.svg" />
+</a>
+
 # git-timeline
 
 git-timeline is a **drop-in replacement** for git-log which improves the readability of its output. Example:

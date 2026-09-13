@@ -1,5 +1,7 @@
 package me.hernancerm;
 
+import static me.hernancerm.CommitLineParser.splitCommitLine;
+import static me.hernancerm.CommitLineParser.toCommit;
 import static org.jline.jansi.Ansi.ansi;
 
 import java.io.BufferedReader;
@@ -9,39 +11,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class GitLogProcessBuilder {
-
-    // Field delimiter.
-    // No field placed before the subject line can contain it.
-    // - Ref names (%d) reject every ASCII control char, so they cannot hold the 0x1F.
-    // - Ident names (%an, %cn) are cut by git at the first '<', so they cannot hold the '<'.
-    // - Hashes (%H, %h, %p) are hex digits and spaces.
-    // The subject line (%s) can hold it, so goes last.
-    static final String DELIMITER = "\u001F<";
-
-    private static final Pattern DELIMITER_PATTERN = Pattern.compile(Pattern.quote(DELIMITER));
-
-    // The delimiter as spelled in a git-log `--pretty=format:` string. %x1f is the 0x1F byte.
-    private static final String DELIMITER_FORMAT = "%x1f<";
-
-    private static final String PRETTY_FORMAT = String.join(DELIMITER_FORMAT,
-            // The leading delimiter closes the prefix added by the git-log option `--graph`.
-            "",
-            "%H", "%h", "%p", "%C(auto)%d", "%cn", "%an", "%ad", "%s");
-
-    // The `--graph` prefix plus the eight fields of PRETTY_FORMAT.
-    private static final int PART_COUNT = 9;
-
-    // Git remote url in any form git-clone accepts, including the scp-like `host:owner/repo`.
-    // The `.git` suffix is optional: `git remote add origin https://github.com/o/r` is valid.
-    // Capture groups: 1:Host, 2:Owner, 3:Repository.
-    // https://git-scm.com/docs/git-clone#_git_urls
-    private static final Pattern REMOTE_URL = Pattern.compile(
-            "^(?:(?:ssh|git|https?|ftps?)://)?(?:[^@/]+@)?([^/:]+)(?::\\d+)?[:/](.+)/([^/]+?)(?:[.]git)?/?$");
 
     public int start(GitLogArgs args, BiFunction<GitCommit, GitRemote, String> commitFormatter)
             throws IOException, InterruptedException {
@@ -62,7 +34,7 @@ public class GitLogProcessBuilder {
         // after the read loop is done.
         try (OutputSink sink = openSink(args, gitCorePagerProcess)) {
             // Null when color is off, which leaves every hyperlink out of the output anyway.
-            GitRemote gitRemote = parseRemoteUrl(
+            GitRemote gitRemote = GitRemote.parse(
                     readFirstLine(gitRemoteProcess, "remote url for: origin"));
 
             try (
@@ -87,7 +59,7 @@ public class GitLogProcessBuilder {
                     } else {
                         // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
                         // just connectors, like `|\` or `|\|`. Anything else git-log emits that does not
-                        // match PRETTY_FORMAT also lands here and is passed through untouched.
+                        // match the commit line format also lands here and is passed through untouched.
                         sink.println(ansi().render(line).toString());
                     }
                 }
@@ -176,53 +148,14 @@ public class GitLogProcessBuilder {
         }
     }
 
-    // Returns null when there is no remote, the url is not a git url (e.g. a local path) or the
-    // host is unsupported. Only the hyperlinks are lost, the rest of the output is unaffected.
-    static GitRemote parseRemoteUrl(String originUrl) {
-        if (originUrl == null || originUrl.isEmpty()) {
-            return null;
-        }
-
-        Matcher matcher = REMOTE_URL.matcher(originUrl);
-        if (!matcher.matches()) {
-            return null;
-        }
-
-        GitRemote.Platform platform = GitRemote.Platform.from(matcher.group(1));
-        if (platform == null) {
-            return null;
-        }
-
-        return new GitRemote(platform, matcher.group(3), matcher.group(2));
-    }
-
-    static String[] splitCommitLine(String line) {
-        String[] parts = DELIMITER_PATTERN.split(line, PART_COUNT);
-        return parts.length == PART_COUNT ? parts : null;
-    }
-
-    static GitCommit toCommit(String[] parts) {
-        return new GitCommit(
-                parts[1],
-                parts[2],
-                parts[3].split("\\s"),
-                parts[4],
-                parts[5],
-                parts[6],
-                parts[7],
-                parts[8]);
-    }
-
     private List<String> getGitLogCommand(GitLogArgs args) {
         return Stream.concat(Stream.of(
                         "git",
                         "log",
                         args.isColorEnabled() ? "--color=always" : "--color=never",
                         "--date=format:%b-%d-%Y",
-                        "--pretty=format:" + PRETTY_FORMAT),
-                // Drop the delimiter's control byte from pass-through args. Without this a user
-                // supplied format, e.g. `--date=format:`, could inject a field boundary.
+                        "--pretty=format:" + CommitLineParser.PRETTY_FORMAT),
                 Arrays.stream(args.unparsedArgs())
-                        .map(arg -> arg.replace("\u001F", ""))).toList();
+                        .map(CommitLineParser::stripDelimiter)).toList();
     }
 }

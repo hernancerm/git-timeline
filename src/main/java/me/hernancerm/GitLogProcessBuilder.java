@@ -17,19 +17,26 @@ import java.util.stream.Stream;
 
 public class GitLogProcessBuilder {
 
-    // Items.
-    private static final String FULL_HASH_ITEM = "full-hash";
-    private static final String ABBREVIATED_HASH_ITEM = "abbreviated-hash";
-    private static final String ABBREVIATED_PARENT_HASHES_ITEM = "abbreviated-parent-hashes";
-    private static final String REF_NAMES_COLORED_ITEM = "ref-names-colored";
-    private static final String COMMITTER_NAME_ITEM = "committer-name";
-    private static final String AUTHOR_NAME_ITEM = "author-name";
-    private static final String AUTHOR_DATE_ITEM = "author-date";
-    private static final String SUBJECT_LINE_ITEM = "subject-line";
+    // Field delimiter. No field placed before the subject line can contain it, so repository
+    // content cannot be mistaken for a field boundary:
+    // - Ref names (%d) reject every ASCII control char, so they cannot hold the 0x1F.
+    // - Ident names (%an, %cn) are cut by git at the first '<', so they cannot hold the '<'.
+    // - Hashes (%H, %h, %p) are hex digits and spaces.
+    // The subject line (%s) can hold both bytes, so it goes last and takes the rest of the line.
+    // There is no field after it to corrupt.
+    static final String DELIMITER = "\u001F<";
+    private static final Pattern DELIMITER_PATTERN = Pattern.compile(Pattern.quote(DELIMITER));
 
-    // Capture groups: 1:Item, 2:Value.
-    private static final String TAG_REGEX =
-            "<hernancerm[.]git-timeline[.]([a-z-]+)>(.*?)</hernancerm[.]git-timeline[.]\\1>";
+    // The delimiter as spelled in a git-log `--pretty=format:` string. %x1f is the 0x1F byte.
+    private static final String DELIMITER_FORMAT = "%x1f<";
+
+    private static final String PRETTY_FORMAT = String.join(DELIMITER_FORMAT,
+            // The leading delimiter closes the prefix added by the git-log option `--graph`.
+            "",
+            "%H", "%h", "%p", "%C(auto)%d", "%cn", "%an", "%ad", "%s");
+
+    // The `--graph` prefix plus the eight fields of PRETTY_FORMAT.
+    private static final int PART_COUNT = 9;
 
     public int start(GitLogArgs args, Function<GitCommit, String> commitFormatter)
             throws IOException, InterruptedException {
@@ -62,7 +69,6 @@ public class GitLogProcessBuilder {
             String line;
             GitCommit commit = new GitCommit();
             GitRemote gitRemote = getGitRemote();
-            Pattern pattern = Pattern.compile(TAG_REGEX);
             while ((line = bufferedReader.readLine()) != null) {
 
                 // Fixes delay after user quits pager (e.g., press 'q' in less) on big repos.
@@ -78,23 +84,20 @@ public class GitLogProcessBuilder {
                     }
                 }
 
-                int startIndex;
-                Matcher matcher = pattern.matcher(line);
-                if (matcher.find()) {
-                    startIndex = matcher.start();
-                    do {
-                        populateCommitAttribute(matcher.group(1), matcher.group(2), commit);
-                    } while (matcher.find());
+                String[] parts = splitCommitLine(line);
+                if (parts != null) {
+                    populateCommit(parts, commit);
                     commit.setRemote(gitRemote);
                     commit.setArgs(args);
-                    // Substring is needed to account for the prefixes of the git-log option `--graph`.
+                    // parts[0] holds the prefixes of the git-log option `--graph`.
                     // Example prefixes in this case: `* <commit>`, `| * <commit>`.
                     println(args, pagerWriter, ansi().render(
-                            line.substring(0, startIndex) + commitFormatter.apply(commit)).toString());
+                            parts[0] + commitFormatter.apply(commit)).toString());
                     commit.reset();
                 } else {
                     // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
-                    // just connectors, like `|\` or `|\|`.
+                    // just connectors, like `|\` or `|\|`. Anything else git-log emits that does not
+                    // match PRETTY_FORMAT also lands here and is passed through untouched.
                     println(args, pagerWriter, ansi().render(line).toString());
                 }
             }
@@ -240,73 +243,37 @@ public class GitLogProcessBuilder {
         return gitRemote;
     }
 
-    private void populateCommitAttribute(
-            String serializedAttributeName,
-            String attributeValue,
-            GitCommit commit
-    ) {
-        switch (serializedAttributeName) {
-            case FULL_HASH_ITEM:
-                commit.setFullHash(attributeValue);
-                break;
-            case ABBREVIATED_HASH_ITEM:
-                commit.setAbbreviatedHash(attributeValue);
-                break;
-            case ABBREVIATED_PARENT_HASHES_ITEM:
-                commit.setAbbreviatedParentHashes(attributeValue.split("\\s"));
-                break;
-            case AUTHOR_NAME_ITEM:
-                commit.setAuthorName(attributeValue);
-                break;
-            case AUTHOR_DATE_ITEM:
-                commit.setAuthorDate(attributeValue);
-                break;
-            case COMMITTER_NAME_ITEM:
-                commit.setCommitterName(attributeValue);
-                break;
-            case SUBJECT_LINE_ITEM:
-                commit.setSubjectLine(attributeValue);
-                break;
-            case REF_NAMES_COLORED_ITEM:
-                commit.setRefNamesColored(attributeValue);
-                break;
-        }
+    /**
+     * Splits a git-log line into the `--graph` prefix followed by the fields of PRETTY_FORMAT.
+     * Returns null when the line carries no commit data.
+     */
+    static String[] splitCommitLine(String line) {
+        // The limit keeps the subject line whole: everything after the last boundary stays in
+        // the final element, delimiters included.
+        String[] parts = DELIMITER_PATTERN.split(line, PART_COUNT);
+        return parts.length == PART_COUNT ? parts : null;
+    }
+
+    static void populateCommit(String[] parts, GitCommit commit) {
+        commit.setFullHash(parts[1]);
+        commit.setAbbreviatedHash(parts[2]);
+        commit.setAbbreviatedParentHashes(parts[3].split("\\s"));
+        commit.setRefNamesColored(parts[4]);
+        commit.setCommitterName(parts[5]);
+        commit.setAuthorName(parts[6]);
+        commit.setAuthorDate(parts[7]);
+        commit.setSubjectLine(parts[8]);
     }
 
     private List<String> getGitLogCommand(String[] args) {
-
-        final String prettyFormat = String.join("",
-                "<hernancerm.git-timeline.full-hash>",
-                    "%H",
-                "</hernancerm.git-timeline.full-hash>",
-                "<hernancerm.git-timeline.abbreviated-hash>",
-                    "%h",
-                "</hernancerm.git-timeline.abbreviated-hash>",
-                "<hernancerm.git-timeline.abbreviated-parent-hashes>",
-                    "%p",
-                "</hernancerm.git-timeline.abbreviated-parent-hashes>",
-                "<hernancerm.git-timeline.ref-names-colored>",
-                    "%C(auto)%d",
-                "</hernancerm.git-timeline.ref-names-colored>",
-                "<hernancerm.git-timeline.committer-name>",
-                    "%cn",
-                "</hernancerm.git-timeline.committer-name>",
-                "<hernancerm.git-timeline.author-name>",
-                    "%an",
-                "</hernancerm.git-timeline.author-name>",
-                "<hernancerm.git-timeline.author-date>",
-                    "%ad",
-                "</hernancerm.git-timeline.author-date>",
-                "<hernancerm.git-timeline.subject-line>",
-                    "%s",
-                "</hernancerm.git-timeline.subject-line>");
-
         return Stream.concat(Stream.of(
                         "git",
                         "log",
                         "--color=always",
                         "--date=format:%b-%d-%Y",
-                        "--pretty=format:" + prettyFormat),
-                Arrays.stream(args)).toList();
+                        "--pretty=format:" + PRETTY_FORMAT),
+                // Drop the delimiter's control byte from pass-through args. Without this a user
+                // supplied format, e.g. `--date=format:`, could inject a field boundary.
+                Arrays.stream(args).map(arg -> arg.replace("\u001F", ""))).toList();
     }
 }

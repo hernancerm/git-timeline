@@ -1,6 +1,6 @@
 # git-timeline
 
-Timeline is a **drop-in replacement** for git-log which improves the readability of its output. Example:
+git-timeline is a **drop-in replacement** for git-log which improves the readability of its output. Example:
 
 ```
 ...
@@ -16,10 +16,10 @@ a1de8921  Jan-11-2026  Hernán Cervera  docs: clean up README.md
 
 ## Usage
 
-Timeline is a **drop-in replacement** for `git log`. So `git timeline` accepts ANY option
+git-timeline is a **drop-in replacement** for `git log`. So `git timeline` accepts ANY option
 supported by [git-log](https://git-scm.com/docs/git-log).
 
-Timeline has very few additional options. Learn them through `git timeline -h`.
+git-timeline has very few additional options. Learn them through `git timeline -h`.
 
 ## Features
 
@@ -32,7 +32,7 @@ Timeline has very few additional options. Learn them through `git timeline -h`.
 
 ## Limitations
 
-- This in a commit subject line breaks the format: `</hernancerm.git-timeline.subject-line>`
+- `--pretty` and `--format` replace the format of git-timeline, so commits render as plain git-log output.
 - Not tested in any way in Windows.
 
 ## Installation
@@ -47,7 +47,7 @@ Timeline has very few additional options. Learn them through `git timeline -h`.
 brew tap hernancerm/formulas https://github.com/hernancerm/formulas
 ```
 
-2. Install Timeline:
+2. Install git-timeline:
 
 ```text
 brew install git-timeline
@@ -74,7 +74,7 @@ Optional: `~/.gitconfig`: Create the below alias to shorten `git timeline` to `g
 brew update
 ```
 
-2. Upgrade Timeline.
+2. Upgrade git-timeline.
 
 ```text
 brew upgrade git-timeline
@@ -167,7 +167,7 @@ Execute it with `java -jar ./target/git-timeline.jar`.
 
 ## Versioning
 
-Timeline does not follow semantic versioning.
+git-timeline does not follow semantic versioning.
 
 - `x.y`. Here is what an increment on each part means:
   - `x`: At least one breaking change is included in the release.

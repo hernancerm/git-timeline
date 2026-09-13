@@ -25,15 +25,20 @@ public class GitTimeline implements Callable<Integer> {
         this.gitLogFormatter = gitLogFormatter;
     }
 
+    // System.console() is also null when stdin is redirected, so `git timeline < /dev/null`
+    // loses color where git would keep it. Use `--color=always` for that case.
     @Override
     public Integer call() throws Exception {
-        return gitLogProcessBuilder.start(parseArgs(args), gitLogFormatter::format);
+        return gitLogProcessBuilder.start(
+                parseArgs(args, System.console() != null), gitLogFormatter::format);
     }
 
-    private GitLogArgs parseArgs(String[] args) {
+    GitLogArgs parseArgs(String[] args, boolean isTerminal) {
         List<String> unparsedArgs = new ArrayList<>();
         var isGraphEnabled = false;
-        var isPagerEnabled = true;
+        var isColorEnabled = isTerminal;
+        var isPagerEnabled = isTerminal;
+
         for (String arg : args) {
             switch (arg) {
                 case "--help":
@@ -44,16 +49,18 @@ public class GitTimeline implements Callable<Integer> {
                 case "-v":
                     handleVersionOption();
                     break;
+                case "--color":
                 case "--color=always":
                     // Consistent with: https://git-scm.com/docs/git-log
-                    unparsedArgs.add(arg);
-                    setAnsiEnabled(true);
+                    isColorEnabled = true;
+                    break;
+                case "--color=auto":
+                    isColorEnabled = isTerminal;
                     break;
                 case "--color=never":
                 case "--no-color":
                     // Consistent with: https://git-scm.com/docs/git-log
-                    unparsedArgs.add(arg);
-                    setAnsiEnabled(false);
+                    isColorEnabled = false;
                     break;
                 case "--no-pager":
                     // Consistent with: https://git-scm.com/docs/git
@@ -68,8 +75,11 @@ public class GitTimeline implements Callable<Integer> {
                     break;
             }
         }
+
+        setAnsiEnabled(isColorEnabled);
         return new GitLogArgs(
                 unparsedArgs.toArray(new String[0]),
+                isColorEnabled,
                 isPagerEnabled,
                 isGraphEnabled);
     }

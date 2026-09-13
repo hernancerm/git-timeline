@@ -85,6 +85,8 @@ brew upgrade git-timeline
 - Date format: Use the option `--date` as defined in the
   [documentation of git-log](https://git-scm.com/docs/git-log#Documentation/git-log.txt---dateformat).
 - Pager command: Use the env var `GIT_PAGER`, `core.pager` from gitconfig or env var `PAGER`.
+- Color and paging: Both are on when the output goes to a terminal and off when it is piped
+  or redirected, as in git-log. Use `--color=always` to keep color through a pipe.
 
 ## Completions
 

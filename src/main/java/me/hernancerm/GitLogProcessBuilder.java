@@ -48,7 +48,7 @@ public class GitLogProcessBuilder {
     public int start(GitLogArgs args, Function<GitCommit, String> commitFormatter)
             throws IOException, InterruptedException {
 
-        ProcessBuilder processBuilder = new ProcessBuilder(getGitLogCommand(args.unparsedArgs()));
+        ProcessBuilder processBuilder = new ProcessBuilder(getGitLogCommand(args));
         // Print stderr to the tty.
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         Process process = processBuilder.start();
@@ -246,15 +246,16 @@ public class GitLogProcessBuilder {
         commit.setSubjectLine(parts[8]);
     }
 
-    private List<String> getGitLogCommand(String[] args) {
+    private List<String> getGitLogCommand(GitLogArgs args) {
         return Stream.concat(Stream.of(
                         "git",
                         "log",
-                        "--color=always",
+                        args.isColorEnabled() ? "--color=always" : "--color=never",
                         "--date=format:%b-%d-%Y",
                         "--pretty=format:" + PRETTY_FORMAT),
                 // Drop the delimiter's control byte from pass-through args. Without this a user
                 // supplied format, e.g. `--date=format:`, could inject a field boundary.
-                Arrays.stream(args).map(arg -> arg.replace("\u001F", ""))).toList();
+                Arrays.stream(args.unparsedArgs())
+                        .map(arg -> arg.replace("\u001F", ""))).toList();
     }
 }

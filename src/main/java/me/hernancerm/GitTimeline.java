@@ -48,9 +48,9 @@ public class GitTimeline implements Callable<Integer> {
                 case "-v":
                     handleVersionOption();
                     break;
+                // Consistent with: https://git-scm.com/docs/git-log
                 case "--color":
                 case "--color=always":
-                    // Consistent with: https://git-scm.com/docs/git-log
                     isColorEnabled = true;
                     break;
                 case "--color=auto":
@@ -58,11 +58,10 @@ public class GitTimeline implements Callable<Integer> {
                     break;
                 case "--color=never":
                 case "--no-color":
-                    // Consistent with: https://git-scm.com/docs/git-log
                     isColorEnabled = false;
                     break;
+                // Consistent with: https://git-scm.com/docs/git
                 case "--no-pager":
-                    // Consistent with: https://git-scm.com/docs/git
                     isPagerEnabled = false;
                     break;
                 default:

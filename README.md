@@ -195,4 +195,4 @@ git-timeline does not follow semantic versioning.
 
 - `x.y`. Here is what an increment on each part means:
   - `x`: At least one breaking change is included in the release.
-  - `y`: Only non-breaking changes, of any kind, are included in the release.
+  - `y`: Only non-breaking changes.

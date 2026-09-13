@@ -38,6 +38,13 @@ public class GitLogProcessBuilder {
     // The `--graph` prefix plus the eight fields of PRETTY_FORMAT.
     private static final int PART_COUNT = 9;
 
+    // Git remote url in any form git-clone accepts, including the scp-like `host:owner/repo`.
+    // The `.git` suffix is optional: `git remote add origin https://github.com/o/r` is valid.
+    // Capture groups: 1:Host, 2:Owner, 3:Repository.
+    // https://git-scm.com/docs/git-clone#_git_urls
+    private static final Pattern REMOTE_URL = Pattern.compile(
+            "^(?:(?:ssh|git|https?|ftps?)://)?(?:[^@/]+@)?([^/:]+)(?::\\d+)?[:/](.+)/([^/]+?)(?:[.]git)?/?$");
+
     public int start(GitLogArgs args, Function<GitCommit, String> commitFormatter)
             throws IOException, InterruptedException {
 
@@ -181,7 +188,6 @@ public class GitLogProcessBuilder {
     }
 
     private GitRemote getGitRemote() {
-        GitRemote gitRemote;
         Process process;
 
         try {
@@ -196,51 +202,32 @@ public class GitLogProcessBuilder {
                 var inputStreamReader = new InputStreamReader(process.getInputStream());
                 var bufferedReader = new BufferedReader(inputStreamReader)
         ) {
-            Matcher matcher;
-            String originUrl = bufferedReader.readLine();
-
-            if (originUrl == null || originUrl.isEmpty()) {
-                // No Git remote url.
-                return null;
-            }
-
-            if (originUrl.matches("^https.*$")) {
-                // HTTPS.
-                // The regex syntax `(?:X)` where `X` is a pattern defines a non-capturing
-                // regex group: https://www.baeldung.com/java-regex-non-capturing-groups
-                Pattern pattern = Pattern.compile("https://(?:.*?@)?(.*?)/(.*?)/(.*?)[.]git");
-                matcher = pattern.matcher(originUrl);
-                if (!matcher.find()) {
-                    throw new IllegalStateException(
-                            "Error matching the remote HTTPS url to extract its parts: "
-                                    + originUrl);
-                }
-            } else if (originUrl.matches("^git@.*$")) {
-                // SSH.
-                Pattern pattern = Pattern.compile("git@(.*?):(.*?)/(.*?)[.]git");
-                matcher = pattern.matcher(originUrl);
-                if (!matcher.find()) {
-                    throw new IllegalStateException(
-                            "Error matching the remote SSH url to extract its parts: "
-                                    + originUrl);
-                }
-            } else {
-                // Unsupported Git remote protocol.
-                return null;
-            }
-
-            gitRemote = new GitRemote(
-                    GitRemote.Platform.from(matcher.group(1)),
-                    matcher.group(3),
-                    matcher.group(2));
-
+            return parseRemoteUrl(bufferedReader.readLine());
         } catch (IOException e) {
             throw new RuntimeException(
                     "Error reading remote url for: origin",
                     e);
         }
+    }
 
-        return gitRemote;
+    // Returns null when there is no remote, the url is not a git url (e.g. a local path) or the
+    // host is unsupported. Only the hyperlinks are lost, the rest of the output is unaffected.
+    static GitRemote parseRemoteUrl(String originUrl) {
+        if (originUrl == null || originUrl.isEmpty()) {
+            return null;
+        }
+
+        Matcher matcher = REMOTE_URL.matcher(originUrl);
+        if (!matcher.matches()) {
+            return null;
+        }
+
+        GitRemote.Platform platform = GitRemote.Platform.from(matcher.group(1));
+        if (platform == null) {
+            return null;
+        }
+
+        return new GitRemote(platform, matcher.group(3), matcher.group(2));
     }
 
     static String[] splitCommitLine(String line) {

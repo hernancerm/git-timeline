@@ -29,15 +29,12 @@ public class PagerSink implements OutputSink {
 
     static GitQuery startCorePagerLookup(UnaryOperator<String> env) {
 
-        // GIT_PAGER wins over core.pager, so asking git for core.pager is only worth a subprocess
-        // when GIT_PAGER is unset.
+        // GIT_PAGER wins over core.pager, so the subprocess is only worth it when it is unset.
         if (isSet(env.apply("GIT_PAGER"))) {
             return GitQuery.skipped();
         }
 
-        // In the case of 'delta', the pager configuration is retrieved from the
-        // file `.gitconfig` at user root from the section `[delta]`. No need to
-        // read default 'delta' opts here.
+        // 'delta' reads its own opts from the `[delta]` section of `.gitconfig`, so none here.
 
         return GitQuery.start(
                 "git config value 'core.pager'", "git", "config", "get", "core.pager");
@@ -52,8 +49,7 @@ public class PagerSink implements OutputSink {
         return new PagerSink(processBuilder.start());
     }
 
-    // Documentation for precedence of pager command source:
-    // https://git-scm.com/docs/git-var#Documentation/git-var.txt-GITPAGER
+    // Precedence: https://git-scm.com/docs/git-var#Documentation/git-var.txt-GITPAGER
     static List<String> resolveCommand(String corePagerCommand, UnaryOperator<String> env) {
 
         String gitPagerCommand = env.apply("GIT_PAGER");
@@ -73,7 +69,7 @@ public class PagerSink implements OutputSink {
         return DEFAULT_COMMAND;
     }
 
-    // An unset variable and one set to the empty string are both "no pager named here".
+    // An unset variable and an empty one both name no pager.
     private static boolean isSet(String value) {
         return value != null && !value.isEmpty();
     }
@@ -91,7 +87,7 @@ public class PagerSink implements OutputSink {
 
     @Override
     public void close() throws InterruptedException {
-        // Closing the writer signals EOF to the pager (less), which starts interactive mode.
+        // EOF is what starts the pager's interactive mode.
         writer.close();
         process.waitFor();
     }

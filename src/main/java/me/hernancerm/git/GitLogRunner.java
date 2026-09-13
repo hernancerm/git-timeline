@@ -21,22 +21,19 @@ import java.util.function.BiFunction;
 /** Runs git-log and writes every line of it, formatted, to the sink. */
 public class GitLogRunner {
 
-    // Dropped when the user picks the format, since the date belongs to the format.
+    // Dropped when the user picks the format, since the date is part of it.
     private static final String DATE_FORMAT = "--date=format:%b-%d-%Y";
 
-    // How long git-log gets to exit once its output has run out or it has been destroyed.
+    // How long git-log gets to exit on its own.
     private static final int EXIT_TIMEOUT_MILLIS = 500;
 
-    // What a shell reports for a process killed by SIGTERM (128 + 15), which is the signal
-    // destroy() sends.
+    // What a shell reports for a SIGTERM kill (128 + 15), the signal destroy() sends.
     private static final int SIGTERM_EXIT_CODE = 143;
 
     public int run(GitLogArgs args, BiFunction<GitCommit, GitRemote, String> commitFormatter)
             throws IOException, InterruptedException {
 
-        // Launch the git lookups before anything reads them. Starting a query does not block,
-        // so these run alongside each other and alongside git-log instead of one after the
-        // other. Each is skipped when its value cannot be used.
+        // Starting a query does not block, so these run alongside each other and git-log.
         GitQuery remoteLookup =
                 args.isColorEnabled() ? GitRemote.startLookup() : GitQuery.skipped();
         GitQuery corePagerLookup =
@@ -47,10 +44,9 @@ public class GitLogRunner {
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         Process process = processBuilder.start();
 
-        // Closing the sink is what starts the pager's interactive mode, so it has to happen
-        // after the read loop is done.
+        // Closing the sink starts the pager's interactive mode, so it waits for the read loop.
         try (OutputSink sink = openSink(args, corePagerLookup)) {
-            // Null when color is off, which leaves every hyperlink out of the output anyway.
+            // Null when color is off, which drops every hyperlink.
             GitRemote gitRemote = GitRemote.parse(remoteLookup.firstLine());
 
             try (
@@ -60,7 +56,7 @@ public class GitLogRunner {
                 String line;
                 while ((line = bufferedReader.readLine()) != null) {
 
-                    // Fixes delay after user quits pager (e.g., press 'q' in less) on big repos.
+                    // Quitting the pager on a big repo would otherwise leave a delay.
                     if (!sink.isOpen()) {
                         process.destroy();
                         break;
@@ -68,14 +64,12 @@ public class GitLogRunner {
 
                     String[] parts = splitCommitLine(line);
                     if (parts != null) {
-                        // parts[0] holds the prefixes of the git-log option `--graph`.
-                        // Example prefixes in this case: `* <commit>`, `| * <commit>`.
+                        // parts[0] is the `--graph` prefix, e.g. `* `, `| * `.
                         sink.println(ansi().render(parts[0]
                                 + commitFormatter.apply(toCommit(parts), gitRemote)).toString());
                     } else {
-                        // "Intermediate" line (no commit data) in git-log `--graph`. These are lines with
-                        // just connectors, like `|\` or `|\|`. Anything else git-log emits that does not
-                        // match the commit line format also lands here and is passed through untouched.
+                        // A `--graph` connector line like `|\`, or anything else git-log
+                        // emits that is not a commit line. Passed through untouched.
                         sink.println(ansi().render(line).toString());
                     }
                 }
@@ -85,9 +79,8 @@ public class GitLogRunner {
         return waitForExitCode(process);
     }
 
-    // exitValue() throws while the process is still running, so the wait has to succeed
-    // before asking. Only the destroy above can leave git-log running this long, and it
-    // reports SIGTERM whether it obeys in time or has to be killed outright.
+    // exitValue() throws while the process runs, so the wait has to succeed first. Only a
+    // destroy() leaves git-log running this long, which is a SIGTERM either way.
     static int waitForExitCode(Process process) throws InterruptedException {
         if (process.waitFor(EXIT_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS)) {
             return process.exitValue();
@@ -111,9 +104,8 @@ public class GitLogRunner {
                 args.isColorEnabled() ? "--color=always" : "--color=never",
                 "--pretty=format:" + CommitLineParser.PRETTY_FORMAT));
 
-        // The date format is part of the line format, so a user supplied format has to take
-        // the date with it. Forcing ours left `--pretty=medium` showing a date git-log would
-        // never print there.
+        // A user supplied format brings its own date. Forcing ours left `--pretty=medium`
+        // showing a date git-log would never print.
         if (!replacesTheFormat(args.unparsedArgs())) {
             command.add(DATE_FORMAT);
         }

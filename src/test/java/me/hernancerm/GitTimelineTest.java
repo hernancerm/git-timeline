@@ -66,7 +66,7 @@ class GitTimelineTest {
 
     @Test
     void parseArgs_givenColorOption_thenDoNotPassItOnToGitLog() {
-        // The color of git-log is set from isColorEnabled, so forwarding these would be redundant.
+        // isColorEnabled already sets the color of git-log, so forwarding these is redundant.
         assertArrayEquals(new String[0], parse(TERMINAL, "--color=never").unparsedArgs());
         assertArrayEquals(new String[0], parse(TERMINAL, "--no-color").unparsedArgs());
         assertArrayEquals(new String[0], parse(TERMINAL, "--no-pager").unparsedArgs());

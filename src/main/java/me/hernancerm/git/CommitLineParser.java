@@ -3,30 +3,29 @@ package me.hernancerm.git;
 import java.util.regex.Pattern;
 
 /**
- * The line format git-log is asked for, and the parser that reads it back. Both halves live
- * here so that changing one is done next to the other.
+ * The line format git-log is asked for, and the parser that reads it back. Kept together so one
+ * is changed next to the other.
  */
 public class CommitLineParser {
 
-    // Field delimiter.
-    // No field placed before the subject line can contain it.
-    // - Ref names (%d) reject every ASCII control char, so they cannot hold the 0x1F.
-    // - Ident names (%an, %cn) are cut by git at the first '<', so they cannot hold the '<'.
+    // Field delimiter. No field before the subject line can hold it:
+    // - Ref names (%d) reject every ASCII control char, so not the 0x1F.
+    // - Ident names (%an, %cn) are cut by git at the first '<'.
     // - Hashes (%H, %h, %p) are hex digits and spaces.
-    // The subject line (%s) can hold it, so goes last.
+    // The subject line (%s) can, so it goes last.
     static final String DELIMITER = "\u001F<";
 
     private static final Pattern DELIMITER_PATTERN = Pattern.compile(Pattern.quote(DELIMITER));
 
-    // The delimiter as spelled in a git-log `--pretty=format:` string. %x1f is the 0x1F byte.
+    // DELIMITER as spelled for `--pretty=format:`. %x1f is the 0x1F byte.
     private static final String DELIMITER_FORMAT = "%x1f<";
 
     static final String PRETTY_FORMAT = String.join(DELIMITER_FORMAT,
-            // The leading delimiter closes the prefix added by the git-log option `--graph`.
+            // The leading delimiter closes the `--graph` prefix.
             "",
             "%H", "%h", "%p", "%C(auto)%d", "%cn", "%an", "%ad", "%s");
 
-    // The `--graph` prefix plus the eight fields of PRETTY_FORMAT.
+    // The `--graph` prefix plus the eight PRETTY_FORMAT fields.
     private static final int PART_COUNT = 9;
 
     private CommitLineParser() {
@@ -51,10 +50,7 @@ public class CommitLineParser {
                 parts[8]);
     }
 
-    /**
-     * Drops the delimiter's control byte from a pass-through arg. Without this a user supplied
-     * format, e.g. `--date=format:`, could inject a field boundary.
-     */
+    /** Drops the delimiter's control byte, so an arg cannot inject a field boundary. */
     static String stripDelimiter(String arg) {
         return arg.replace("\u001F", "");
     }

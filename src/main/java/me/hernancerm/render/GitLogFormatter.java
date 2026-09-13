@@ -13,7 +13,7 @@ public class GitLogFormatter {
         this.hyperlinker = hyperlinker;
     }
 
-    // The remote is null when there is none or color is off, which leaves every hyperlink out.
+    // A null remote leaves every hyperlink out.
     public String format(GitCommit c, GitRemote r) {
         boolean isMergeCommit = c.abbreviatedParentHashes().length > 1;
         boolean authorDiffersFromCommitter = !c.authorName().equals(c.committerName());
@@ -53,7 +53,7 @@ public class GitLogFormatter {
         if (r == null) {
             return subjectLine;
         }
-        // A platform with no Jira alongside it yields no url, which leaves the key as plain text.
+        // No Jira url leaves the key as plain text.
         String output = hyperlinker.linkJiraIssues(subjectLine, r::jiraIssueUrl);
         return hyperlinker.linkIssueNumbers(output, r::issueUrl);
     }

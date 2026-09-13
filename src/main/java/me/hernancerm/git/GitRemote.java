@@ -10,24 +10,19 @@ public record GitRemote(
         String repositoryName,
         String ownerName) {
 
-    // Git remote url in any form git-clone accepts, including the scp-like `host:owner/repo`.
-    // The `.git` suffix is optional: `git remote add origin https://github.com/o/r` is valid.
-    // Capture groups: 1:Host, 2:Owner, 3:Repository.
+    // Any url form git-clone accepts, including the scp-like `host:owner/repo`. The `.git`
+    // suffix is optional. Groups: 1:host, 2:owner, 3:repository.
     // https://git-scm.com/docs/git-clone#_git_urls
     private static final Pattern REMOTE_URL = Pattern.compile(
             "^(?:(?:ssh|git|https?|ftps?)://)?(?:[^@/]+@)?([^/:]+)(?::\\d+)?[:/](.+)/([^/]+?)(?:[.]git)?/?$");
 
-    /** Starts the lookup of the url of the remote named origin. */
+    /** Starts the lookup of the url of the remote `origin`. */
     public static GitQuery startLookup() {
         return GitQuery.start(
                 "remote url for: origin", "git", "remote", "get-url", "origin");
     }
 
-    /**
-     * Returns null when there is no remote, the url is not a git url (e.g. a local path) or
-     * the host is unsupported. Only the hyperlinks are lost, the rest of the output is
-     * unaffected.
-     */
+    /** Returns null for no remote, a non-git url (e.g. a local path) or an unsupported host. */
     public static GitRemote parse(String originUrl) {
         if (originUrl == null || originUrl.isEmpty()) {
             return null;
@@ -54,10 +49,7 @@ public record GitRemote(
         };
     }
 
-    /**
-     * The web page of an issue or a pull request. On GitHub one url covers both: an issue url
-     * redirects to the pull request when the number belongs to one.
-     */
+    /** The web page of an issue or a pull request. On GitHub one url covers both. */
     public String issueUrl(String issueNumber) {
         return switch (platform) {
             case BITBUCKET_ORG -> baseUrl() + "/pull-requests/" + issueNumber;
@@ -65,7 +57,7 @@ public record GitRemote(
         };
     }
 
-    /** The Jira issue page, or null for a platform with no Jira alongside it. */
+    /** The Jira issue page, or null for a platform with no Jira. */
     public String jiraIssueUrl(String issueKey) {
         return switch (platform) {
             case BITBUCKET_ORG -> "https://" + ownerName + ".atlassian.net/browse/" + issueKey;
@@ -88,7 +80,7 @@ public record GitRemote(
             this.host = host;
         }
 
-        /** Returns null for an unsupported host, which costs only the hyperlinks. */
+        /** Returns null for an unsupported host. */
         public static Platform from(String host) {
             for (Platform platform : values()) {
                 if (platform.host.equals(host)) {

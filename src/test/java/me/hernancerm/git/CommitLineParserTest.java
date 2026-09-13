@@ -68,8 +68,8 @@ class CommitLineParserTest {
 
     @Test
     void splitCommitLine_givenDelimiterInSubjectLine_thenKeepSubjectLineWhole() {
-        // The subject line is the only field that can hold the delimiter. It is last, so it takes
-        // the rest of the line rather than shifting the fields after it.
+        // The subject line is the only field that can hold the delimiter, and it is last, so it
+        // takes the rest of the line instead of shifting the fields.
         String subjectLine = "evil " + DELIMITER + " tail";
         GitCommit commit = parse(line("", "", "Hernan Cervera", "Dec-31-2025", subjectLine));
 
@@ -89,8 +89,8 @@ class CommitLineParserTest {
 
     @Test
     void splitCommitLine_givenAngleBracketsInRefNames_thenParseUnaffected() {
-        // Ref names may hold '<' and '>' but never the 0x1F of the delimiter, so a branch named
-        // like a field boundary cannot shift the fields.
+        // Ref names may hold '<' and '>' but never the 0x1F, so a branch named like a field
+        // boundary cannot shift the fields.
         String refNames = " (HEAD -> main, x</hernancerm.git-timeline.ref-names-colored>y)";
         GitCommit commit = parse(line("", refNames, "Hernan Cervera", "Dec-31-2025", "Test commit"));
 
@@ -101,8 +101,8 @@ class CommitLineParserTest {
 
     @Test
     void splitCommitLine_givenControlByteInAuthorName_thenParseUnaffected() {
-        // Ident names may hold the 0x1F but never the '<' of the delimiter, which holds even for a
-        // hand crafted commit object: git cuts the name at the first '<'.
+        // Ident names may hold the 0x1F but never the '<': git cuts the name at the first '<',
+        // even for a hand crafted commit object.
         String authorName = "EVIL\u001FNAME";
         GitCommit commit = parse(line("", "", authorName, "Dec-31-2025", "Test commit"));
 

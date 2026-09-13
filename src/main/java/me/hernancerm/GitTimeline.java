@@ -25,7 +25,7 @@ public class GitTimeline implements Callable<Integer> {
     }
 
     // System.console() is also null when stdin is redirected, so `git timeline < /dev/null`
-    // loses color where git would keep it. Use `--color=always` for that case.
+    // loses color. `--color=always` restores it.
     @Override
     public Integer call() throws Exception {
         GitLogArgs gitLogArgs = parseArgs(args, System.console() != null);

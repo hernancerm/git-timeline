@@ -19,7 +19,6 @@ class GitLogRunnerTest {
     @Test
     void waitForExitCode_givenProcessThatOutlivesTheWait_thenReportSigterm() throws Exception {
         // Regression: exitValue() was asked while the process was still running, which throws.
-        // Quitting the pager on a big repo is what gets git-log here.
         Process process = new ProcessBuilder("sleep", "30").start();
 
         assertEquals(143, GitLogRunner.waitForExitCode(process));
@@ -40,7 +39,7 @@ class GitLogRunnerTest {
     @Test
     void getGitLogCommand_givenAFormatOption_thenLeaveTheDateToGitLog() {
         // Regression: the forced date leaked into every format that prints one, so
-        // `--pretty=medium` showed a date git-log would never print there.
+        // `--pretty=medium` showed a date git-log would never print.
         String[][] formatOptions = {
                 {"--pretty=medium"},
                 {"--pretty", "medium"},

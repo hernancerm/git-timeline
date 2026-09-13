@@ -4,17 +4,13 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * Builds terminal hyperlinks. Whether they are wanted is settled once, when this is built, so
- * that a run without color needs no flag reachable from anywhere else.
- */
+/** Builds terminal hyperlinks. Whether they are wanted is settled once, at construction. */
 public class Hyperlinker {
 
-    // Jira issue key. E.g.: ABC-123
-    // The lookahead keeps version-like text, e.g. `xyz-8.2`, from being linked.
+    // Jira issue key, e.g. `ABC-123`. The lookahead rejects version-like text, e.g. `xyz-8.2`.
     private static final Pattern JIRA_ISSUE_KEY = Pattern.compile("([A-Z]+-\\d+)(?!.*[.]\\d)");
 
-    // Issue or pull request number. E.g.: #123
+    // Issue or pull request number, e.g. `#123`.
     private static final Pattern ISSUE_NUMBER = Pattern.compile("#(\\d+)");
 
     private final boolean enabled;
@@ -26,11 +22,7 @@ public class Hyperlinker {
     /** Wraps the title in a hyperlink to the url. */
     public String link(String url, String title) {
         if (enabled) {
-            // https://unix.stackexchange.com/a/437585
-            // To get the octal escape sequences for '\e', '\a', etc., do this:
-            // 1. $ echo -n '\e' > _.txt
-            // 2. $ nvim _.txt
-            // 3. ga
+            // OSC 8 hyperlink: https://unix.stackexchange.com/a/437585
             return "\033]8;;" + url + "\007" + title + "\033]8;;\007";
         } else {
             return title;
@@ -47,12 +39,10 @@ public class Hyperlinker {
         return linkEveryMatch(ISSUE_NUMBER, line, toUrl, number -> "#" + number);
     }
 
-    // Replaces capture group 1 of every match with a hyperlink, in a single pass. A match
-    // whose url is null is left as plain text, which is how a platform declines to link one
-    // kind of id.
-    // appendReplacement moves past what it just wrote, so a hyperlink is never rescanned. The
-    // rescanning version needed a `(?!.*\007)` lookahead to avoid linking its own output, which
-    // also made it skip a match whenever an earlier pass had left a hyperlink further right.
+    // Replaces capture group 1 of every match in one pass. A null url leaves the match as
+    // plain text. appendReplacement moves past what it wrote, so a hyperlink is never
+    // rescanned. The rescanning version needed a `(?!.*\007)` lookahead not to link its own
+    // output, which also skipped any match with a hyperlink further right.
     private String linkEveryMatch(
             Pattern pattern,
             String line,

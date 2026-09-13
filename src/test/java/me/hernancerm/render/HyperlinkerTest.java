@@ -52,8 +52,8 @@ class HyperlinkerTest {
 
     @Test
     void hyperlinkIssueNumbers_givenJiraHyperlinkFurtherRight_thenStillHyperlinkTheNumber() {
-        // Regression: the rescanning version rejected a match that had a BEL anywhere after it,
-        // so the Jira pass running first left this number unlinked.
+        // Regression: the rescanning version rejected any match with a BEL after it, so the
+        // Jira pass running first left this number unlinked.
         String jiraLinked = HYPERLINKER.linkJiraIssues("Merge #42 for ABC-123", JIRA_URL);
 
         String output = HYPERLINKER.linkIssueNumbers(jiraLinked, PR_URL);
@@ -81,7 +81,7 @@ class HyperlinkerTest {
 
     @Test
     void hyperlinkJiraIssues_givenNoUrl_thenLeaveTheKeyAsPlainText() {
-        // How a platform with no Jira alongside it declines to link issue keys.
+        // How a platform with no Jira declines to link issue keys.
         String output = HYPERLINKER.linkJiraIssues("Fix ABC-123 now", issueKey -> null);
 
         assertEquals("Fix ABC-123 now", output);

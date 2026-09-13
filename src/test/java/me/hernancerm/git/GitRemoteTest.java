@@ -44,8 +44,8 @@ class GitRemoteTest {
 
     @Test
     void parse_givenUrlWithoutHyperlinks_thenReturnNull() {
-        // No hyperlinks is the worst outcome of an unparseable or unsupported remote. Throwing
-        // would take the whole log down with it.
+        // An unparseable or unsupported remote costs only the hyperlinks. Throwing would take
+        // the whole log down.
         String[] urls = {
                 "/local/path/repo",
                 "../sibling/repo",
@@ -66,7 +66,7 @@ class GitRemoteTest {
 
         assertEquals("https://github.com/o/r/commit/3bb28d0", remote.commitUrl("3bb28d0"));
         assertEquals("https://github.com/o/r/issues/382", remote.issueUrl("382"));
-        // GitHub has no Jira alongside it, so the key stays plain text.
+        // GitHub has no Jira, so the key stays plain text.
         assertNull(remote.jiraIssueUrl("ABC-123"));
     }
 

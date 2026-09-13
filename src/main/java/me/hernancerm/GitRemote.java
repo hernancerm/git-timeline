@@ -15,6 +15,12 @@ public record GitRemote(
     private static final Pattern REMOTE_URL = Pattern.compile(
             "^(?:(?:ssh|git|https?|ftps?)://)?(?:[^@/]+@)?([^/:]+)(?::\\d+)?[:/](.+)/([^/]+?)(?:[.]git)?/?$");
 
+    /** Starts the lookup of the url of the remote named origin. */
+    public static GitQuery startLookup() {
+        return GitQuery.start(
+                "remote url for: origin", "git", "remote", "get-url", "origin");
+    }
+
     /**
      * Returns null when there is no remote, the url is not a git url (e.g. a local path) or
      * the host is unsupported. Only the hyperlinks are lost, the rest of the output is

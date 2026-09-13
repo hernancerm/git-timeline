@@ -1,0 +1,19 @@
+#compdef -
+
+# Zsh completion for 'git timeline', for the upstream bash-bridge _git
+# (git's contrib/completion/git-completion.zsh, shipped by Homebrew and others).
+# See: https://github.com/hernancerm/git-timeline/tree/main/completions
+#
+# '#compdef -' registers this file as an autoloadable function stub bound to no
+# command. _git then finds _git_timeline() in $functions and calls it for
+# 'git timeline <TAB>'. Ubuntu/Debian ship a different _git: use _git-timeline.
+#
+# _git has already sourced git-completion.bash, defined the __gitcomp* wrappers
+# and set cur/cword/prev by the time it calls us, so delegating to _git_log is
+# all that is needed to get the completions of 'git log'.
+
+_git_timeline () {
+  _git_log
+}
+
+_git_timeline

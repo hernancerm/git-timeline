@@ -78,22 +78,42 @@ brew upgrade git-timeline
 
 ## Completions
 
-Completions only work for `git timeline`, not `git-timeline`.
-
-Use a command below to sync the completions of `git timeline` when you upgrade Git.
+Completions only work for `git timeline`, not `git-timeline`. They mirror the completions of
+`git log`.
 
 ### Zsh
+
+There are two `_git` completion implementations in the wild and they look up a different function
+name, so pick the file that matches yours. Install it into any directory on your `$FPATH`, then
+restart your shell.
 
 If your Git is installed with Homebrew:
 
 ```text
-curl -L https://raw.githubusercontent.com/hernancerm/git-timeline/refs/heads/main/completions/_git_timeline.generate.zsh \
-  | zsh /dev/stdin > $(brew --prefix)/share/zsh/site-functions/_git_timeline
+curl -L -o "$(brew --prefix)/share/zsh/site-functions/_git_timeline" \
+  https://raw.githubusercontent.com/hernancerm/git-timeline/refs/heads/main/completions/_git_timeline
 ```
 
-If your Git is not installed through Homebrew, just change the destination file to something in your FPATH.
+On Ubuntu/Debian:
 
-For Ubuntu, you might need to create a `_git-timeline` instead of a `_git_timeline`.
+```text
+curl -L -o ~/.zsh/completions/_git-timeline \
+  https://raw.githubusercontent.com/hernancerm/git-timeline/refs/heads/main/completions/_git-timeline
+```
+
+### Troubleshooting
+
+If `git timeline --<TAB>` doesn't work, `_git` probably couldn't find
+`git-completion.bash`. Try this in `~/.zshrc`:
+
+```text
+# Point at the right `git-completion.bash`. Fixes `git timeline` completions.
+zstyle ':completion:*:*:git:*' script $(brew --prefix)/share/zsh/site-functions/git-completion.bash
+```
+
+Running `brew reinstall git` often fixes this. Check its Caveats output for the completions
+directory. On other systems the file is usually at
+`/usr/share/bash-completion/completions/git`.
 
 ## Build from source
 

@@ -8,7 +8,6 @@ public class ShellCommandParser {
     private ShellCommandParser() {
     }
 
-    // AI generated to pass all unit tests.
     public static List<String> parse(String command) {
         List<String> result = new ArrayList<>();
         StringBuilder currentToken = new StringBuilder();

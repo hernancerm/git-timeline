@@ -4,7 +4,11 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AnsiUtils {
+/**
+ * Builds terminal hyperlinks. Whether they are wanted is settled once, when this is built, so
+ * that a run without color needs no flag reachable from anywhere else.
+ */
+public class Hyperlinker {
 
     // Jira issue key. E.g.: ABC-123
     // The lookahead keeps version-like text, e.g. `xyz-8.2`, from being linked.
@@ -13,16 +17,14 @@ public class AnsiUtils {
     // Issue or pull request number. E.g.: #123
     private static final Pattern ISSUE_NUMBER = Pattern.compile("#(\\d+)");
 
-    private static boolean enabled = true;
+    private final boolean enabled;
 
-    private AnsiUtils() {
+    public Hyperlinker(boolean enabled) {
+        this.enabled = enabled;
     }
 
-    public static void setEnabled(boolean enabled) {
-        AnsiUtils.enabled = enabled;
-    }
-
-    public static String buildHyperlink(String url, String title) {
+    /** Wraps the title in a hyperlink to the url. */
+    public String link(String url, String title) {
         if (enabled) {
             // https://unix.stackexchange.com/a/437585
             // To get the octal escape sequences for '\e', '\a', etc., do this:
@@ -36,13 +38,13 @@ public class AnsiUtils {
     }
 
     /** Hyperlinks every Jira issue key in the line, e.g. `ABC-123`. */
-    public static String hyperlinkJiraIssues(String line, UnaryOperator<String> toUrl) {
-        return hyperlinkEveryMatch(JIRA_ISSUE_KEY, line, toUrl, issueKey -> issueKey);
+    public String linkJiraIssues(String line, UnaryOperator<String> toUrl) {
+        return linkEveryMatch(JIRA_ISSUE_KEY, line, toUrl, issueKey -> issueKey);
     }
 
     /** Hyperlinks every issue or pull request number in the line, e.g. `#123`. */
-    public static String hyperlinkIssueNumbers(String line, UnaryOperator<String> toUrl) {
-        return hyperlinkEveryMatch(ISSUE_NUMBER, line, toUrl, number -> "#" + number);
+    public String linkIssueNumbers(String line, UnaryOperator<String> toUrl) {
+        return linkEveryMatch(ISSUE_NUMBER, line, toUrl, number -> "#" + number);
     }
 
     // Replaces capture group 1 of every match with a hyperlink, in a single pass. A match
@@ -51,7 +53,7 @@ public class AnsiUtils {
     // appendReplacement moves past what it just wrote, so a hyperlink is never rescanned. The
     // rescanning version needed a `(?!.*\007)` lookahead to avoid linking its own output, which
     // also made it skip a match whenever an earlier pass had left a hyperlink further right.
-    private static String hyperlinkEveryMatch(
+    private String linkEveryMatch(
             Pattern pattern,
             String line,
             UnaryOperator<String> toUrl,
@@ -72,7 +74,7 @@ public class AnsiUtils {
             String url = toUrl.apply(id);
             matcher.appendReplacement(output, Matcher.quoteReplacement(url == null
                     ? matcher.group()
-                    : buildHyperlink(url, toTitle.apply(id))));
+                    : link(url, toTitle.apply(id))));
         } while (matcher.find());
         matcher.appendTail(output);
 

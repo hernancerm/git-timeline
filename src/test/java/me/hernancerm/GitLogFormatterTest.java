@@ -11,7 +11,7 @@ class GitLogFormatterTest {
 
     @BeforeEach
     void setUp() {
-        gitLogFormatter = new GitLogFormatter();
+        gitLogFormatter = new GitLogFormatter(new Hyperlinker(true));
     }
 
     @Test

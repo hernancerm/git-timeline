@@ -13,24 +13,20 @@ public class GitTimeline implements Callable<Integer> {
 
     private final String[] args;
     private final GitLogProcessBuilder gitLogProcessBuilder;
-    private final GitLogFormatter gitLogFormatter;
 
-    public GitTimeline(
-            String[] args,
-            GitLogProcessBuilder gitLogProcessBuilder,
-            GitLogFormatter gitLogFormatter
-    ) {
+    public GitTimeline(String[] args, GitLogProcessBuilder gitLogProcessBuilder) {
         this.args = args;
         this.gitLogProcessBuilder = gitLogProcessBuilder;
-        this.gitLogFormatter = gitLogFormatter;
     }
 
     // System.console() is also null when stdin is redirected, so `git timeline < /dev/null`
     // loses color where git would keep it. Use `--color=always` for that case.
     @Override
     public Integer call() throws Exception {
-        return gitLogProcessBuilder.start(
-                parseArgs(args, System.console() != null), gitLogFormatter::format);
+        GitLogArgs gitLogArgs = parseArgs(args, System.console() != null);
+        GitLogFormatter formatter =
+                new GitLogFormatter(new Hyperlinker(gitLogArgs.isColorEnabled()));
+        return gitLogProcessBuilder.start(gitLogArgs, formatter::format);
     }
 
     GitLogArgs parseArgs(String[] args, boolean isTerminal) {
@@ -70,16 +66,12 @@ public class GitTimeline implements Callable<Integer> {
             }
         }
 
-        setAnsiEnabled(isColorEnabled);
+        // jline keeps its own global, so this one stays.
+        Ansi.setEnabled(isColorEnabled);
         return new GitLogArgs(
                 unparsedArgs.toArray(new String[0]),
                 isColorEnabled,
                 isPagerEnabled);
-    }
-
-    private void setAnsiEnabled(boolean enabled) {
-        Ansi.setEnabled(enabled);
-        AnsiUtils.setEnabled(enabled);
     }
 
     private void handleHelpOption() {

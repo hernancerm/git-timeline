@@ -2,7 +2,6 @@ package me.hernancerm;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -15,13 +14,7 @@ class GitTimelineTest {
 
     @BeforeEach
     void setUp() {
-        gitTimeline = new GitTimeline(new String[0], new GitLogProcessBuilder(), new GitLogFormatter());
-    }
-
-    @AfterEach
-    void tearDown() {
-        // parseArgs sets the global ANSI state as a side effect.
-        AnsiUtils.setEnabled(true);
+        gitTimeline = new GitTimeline(new String[0], new GitLogProcessBuilder());
     }
 
     private GitLogArgs parse(boolean isTerminal, String... args) {

@@ -96,7 +96,7 @@ public class GitTimeline implements Callable<Integer> {
                     -v, --version
                         Display the version of git-timeline.
 
-                    -P, --no-pager
+                    --no-pager
                         Disable paging.""");
         System.exit(0);
     }

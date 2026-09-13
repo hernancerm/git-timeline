@@ -12,11 +12,11 @@ public class GitTimeline implements Callable<Integer> {
     private static final String VERSION = "2.2-SNAPSHOT";
 
     private final String[] args;
-    private final GitLogProcessBuilder gitLogProcessBuilder;
+    private final GitLogRunner gitLogRunner;
 
-    public GitTimeline(String[] args, GitLogProcessBuilder gitLogProcessBuilder) {
+    public GitTimeline(String[] args, GitLogRunner gitLogRunner) {
         this.args = args;
-        this.gitLogProcessBuilder = gitLogProcessBuilder;
+        this.gitLogRunner = gitLogRunner;
     }
 
     // System.console() is also null when stdin is redirected, so `git timeline < /dev/null`
@@ -26,7 +26,7 @@ public class GitTimeline implements Callable<Integer> {
         GitLogArgs gitLogArgs = parseArgs(args, System.console() != null);
         GitLogFormatter formatter =
                 new GitLogFormatter(new Hyperlinker(gitLogArgs.isColorEnabled()));
-        return gitLogProcessBuilder.start(gitLogArgs, formatter::format);
+        return gitLogRunner.run(gitLogArgs, formatter::format);
     }
 
     GitLogArgs parseArgs(String[] args, boolean isTerminal) {

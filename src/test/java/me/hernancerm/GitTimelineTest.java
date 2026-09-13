@@ -14,7 +14,7 @@ class GitTimelineTest {
 
     @BeforeEach
     void setUp() {
-        gitTimeline = new GitTimeline(new String[0], new GitLogProcessBuilder());
+        gitTimeline = new GitTimeline(new String[0], new GitLogRunner());
     }
 
     private GitLogArgs parse(boolean isTerminal, String... args) {

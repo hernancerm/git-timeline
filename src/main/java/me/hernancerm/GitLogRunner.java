@@ -13,9 +13,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
-public class GitLogProcessBuilder {
+/** Runs git-log and writes every line of it, formatted, to the sink. */
+public class GitLogRunner {
 
-    public int start(GitLogArgs args, BiFunction<GitCommit, GitRemote, String> commitFormatter)
+    public int run(GitLogArgs args, BiFunction<GitCommit, GitRemote, String> commitFormatter)
             throws IOException, InterruptedException {
 
         // Launch the git lookups before anything reads them. Starting a query does not block,

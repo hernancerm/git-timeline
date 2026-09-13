@@ -114,7 +114,7 @@ curl -L -o ~/.zsh/completions/_git-timeline \
 ### Troubleshooting
 
 If `git timeline --<TAB>` doesn't work, `_git` probably couldn't find
-`git-completion.bash`. Try this in `~/.zshrc`:
+`git-completion.bash`. Try in `~/.zshrc`:
 
 ```text
 # Point at the right `git-completion.bash`. Fixes `git timeline` completions.

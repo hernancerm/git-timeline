@@ -81,6 +81,5 @@ class GitTimelineTest {
         GitLogArgs args = parse(TERMINAL, "-n5", "--graph", "--author=me");
 
         assertArrayEquals(new String[]{"-n5", "--graph", "--author=me"}, args.unparsedArgs());
-        assertTrue(args.isGraphEnabled());
     }
 }

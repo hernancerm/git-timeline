@@ -35,7 +35,6 @@ public class GitTimeline implements Callable<Integer> {
 
     GitLogArgs parseArgs(String[] args, boolean isTerminal) {
         List<String> unparsedArgs = new ArrayList<>();
-        var isGraphEnabled = false;
         var isColorEnabled = isTerminal;
         var isPagerEnabled = isTerminal;
 
@@ -66,10 +65,6 @@ public class GitTimeline implements Callable<Integer> {
                     // Consistent with: https://git-scm.com/docs/git
                     isPagerEnabled = false;
                     break;
-                case "--graph":
-                    unparsedArgs.add(arg);
-                    isGraphEnabled = true;
-                    break;
                 default:
                     unparsedArgs.add(arg);
                     break;
@@ -80,8 +75,7 @@ public class GitTimeline implements Callable<Integer> {
         return new GitLogArgs(
                 unparsedArgs.toArray(new String[0]),
                 isColorEnabled,
-                isPagerEnabled,
-                isGraphEnabled);
+                isPagerEnabled);
     }
 
     private void setAnsiEnabled(boolean enabled) {

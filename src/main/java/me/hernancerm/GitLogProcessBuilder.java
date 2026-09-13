@@ -17,14 +17,14 @@ import java.util.stream.Stream;
 
 public class GitLogProcessBuilder {
 
-    // Field delimiter. No field placed before the subject line can contain it, so repository
-    // content cannot be mistaken for a field boundary:
+    // Field delimiter.
+    // No field placed before the subject line can contain it.
     // - Ref names (%d) reject every ASCII control char, so they cannot hold the 0x1F.
     // - Ident names (%an, %cn) are cut by git at the first '<', so they cannot hold the '<'.
     // - Hashes (%H, %h, %p) are hex digits and spaces.
-    // The subject line (%s) can hold both bytes, so it goes last and takes the rest of the line.
-    // There is no field after it to corrupt.
+    // The subject line (%s) can hold it, so goes last.
     static final String DELIMITER = "\u001F<";
+
     private static final Pattern DELIMITER_PATTERN = Pattern.compile(Pattern.quote(DELIMITER));
 
     // The delimiter as spelled in a git-log `--pretty=format:` string. %x1f is the 0x1F byte.
@@ -243,13 +243,7 @@ public class GitLogProcessBuilder {
         return gitRemote;
     }
 
-    /**
-     * Splits a git-log line into the `--graph` prefix followed by the fields of PRETTY_FORMAT.
-     * Returns null when the line carries no commit data.
-     */
     static String[] splitCommitLine(String line) {
-        // The limit keeps the subject line whole: everything after the last boundary stays in
-        // the final element, delimiters included.
         String[] parts = DELIMITER_PATTERN.split(line, PART_COUNT);
         return parts.length == PART_COUNT ? parts : null;
     }

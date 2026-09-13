@@ -1,9 +1,17 @@
 package me.hernancerm;
 
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class AnsiUtils {
+
+    // Jira issue key. E.g.: ABC-123
+    // The lookahead keeps version-like text, e.g. `xyz-8.2`, from being linked.
+    private static final Pattern JIRA_ISSUE_KEY = Pattern.compile("([A-Z]+-\\d+)(?!.*[.]\\d)");
+
+    // Issue or pull request number. E.g.: #123
+    private static final Pattern ISSUE_NUMBER = Pattern.compile("#(\\d+)");
 
     private static boolean enabled = true;
 
@@ -29,30 +37,15 @@ public class AnsiUtils {
 
     public static String hyperlinkJiraIssues(String bitbucketOwner, String line) {
 
-        //   Jira URL:               https://<owner>.atlassian.net/browse/<jira-key>
-        //   <jira-key>:             Regex: [A-Z]+-\d+    E.g.: ABC-123
+        // Jira URL:    https://<owner>.atlassian.net/browse/<jira-key>
 
         if (!enabled) {
             return line;
         }
 
-        String output = line;
-        String nonHyperlinkedJiraIssueKeyRegex = "([A-Z]+-\\d+)(?!.*\007|.*[.]\\d)";
-        Pattern pattern = Pattern.compile(nonHyperlinkedJiraIssueKeyRegex);
-        Matcher matcher = pattern.matcher(output);
-
-        while (matcher.find()) {
-            StringBuilder stringBuilder = new StringBuilder(output);
-            String hyperlink = AnsiUtils.buildHyperlink(String.format(
-                            "https://%s.atlassian.net/browse/%s",
-                            bitbucketOwner, matcher.group(1)),
-                    matcher.group(1));
-            stringBuilder.replace(matcher.start(), matcher.end(), hyperlink);
-            output = stringBuilder.toString();
-            matcher = pattern.matcher(output);
-        }
-
-        return output;
+        return hyperlinkEveryMatch(JIRA_ISSUE_KEY, line,
+                key -> "https://" + bitbucketOwner + ".atlassian.net/browse/" + key,
+                key -> key);
     }
 
     public static String hyperlinkBitbucketPrNumbers(
@@ -62,29 +55,15 @@ public class AnsiUtils {
     ) {
 
         // Bitbucket URL:  https://bitbucket.org/<owner>/<repo>/pull-requests/<pr-number>
-        // <pr-number>:    Regex: #\d+    E.g.: #123
 
         if (!enabled) {
             return line;
         }
 
-        String output = line;
-        String nonHyperlinkedBitbucketPrNumberRegex = "#(\\d+)(?!.*\\007)";
-        Pattern pattern = Pattern.compile(nonHyperlinkedBitbucketPrNumberRegex);
-        Matcher matcher = pattern.matcher(output);
-
-        while (matcher.find()) {
-            StringBuilder stringBuilder = new StringBuilder(output);
-            String hyperlink = AnsiUtils.buildHyperlink(String.format(
-                            "https://bitbucket.org/%s/%s/pull-requests/%s",
-                            bitbucketOwner, bitbucketRepository, matcher.group(1)),
-                    "#" + matcher.group(1));
-            stringBuilder.replace(matcher.start(), matcher.end(), hyperlink);
-            output = stringBuilder.toString();
-            matcher = pattern.matcher(output);
-        }
-
-        return output;
+        return hyperlinkEveryMatch(ISSUE_NUMBER, line,
+                number -> "https://bitbucket.org/" + bitbucketOwner + "/" + bitbucketRepository
+                        + "/pull-requests/" + number,
+                number -> "#" + number);
     }
 
     public static String hyperlinkGitHubIssuesAndPrNumbers(
@@ -96,30 +75,16 @@ public class AnsiUtils {
         // How this method links both issues and PR numbers?:
         // A GitHub issue URL redirects to a PR if the id matches a PR instead of an issue.
 
-        // GitHub URL:      https://github.com/<owner>/<repo>/issues/<issue-number>
-        // <issue-number>:  Regex: #\d+    E.g.: #123
+        // GitHub URL:  https://github.com/<owner>/<repo>/issues/<issue-number>
 
         if (!enabled) {
             return line;
         }
 
-        String output = line;
-        String nonHyperlinkedGitHubIssueNumberRegex = "#(\\d+)(?!.*\\007)";
-        Pattern pattern = Pattern.compile(nonHyperlinkedGitHubIssueNumberRegex);
-        Matcher matcher = pattern.matcher(output);
-
-        while (matcher.find()) {
-            StringBuilder stringBuilder = new StringBuilder(output);
-            String hyperlink = AnsiUtils.buildHyperlink(String.format(
-                            "https://github.com/%s/%s/issues/%s",
-                            gitHubOwner, gitHubRepository, matcher.group(1)),
-                    "#" + matcher.group(1));
-            stringBuilder.replace(matcher.start(), matcher.end(), hyperlink);
-            output = stringBuilder.toString();
-            matcher = pattern.matcher(output);
-        }
-
-        return output;
+        return hyperlinkEveryMatch(ISSUE_NUMBER, line,
+                number -> "https://github.com/" + gitHubOwner + "/" + gitHubRepository
+                        + "/issues/" + number,
+                number -> "#" + number);
     }
 
     public static String hyperlinkToGitHubCommit(
@@ -132,9 +97,9 @@ public class AnsiUtils {
             return line;
         }
 
-        return buildHyperlink(String.format(
-                "https://github.com/%s/%s/commit/%s",
-                        gitHubOwner, gitHubRepository, fullHash),
+        return buildHyperlink(
+                "https://github.com/" + gitHubOwner + "/" + gitHubRepository
+                        + "/commit/" + fullHash,
                 line);
     }
 
@@ -148,9 +113,35 @@ public class AnsiUtils {
             return line;
         }
 
-        return buildHyperlink(String.format(
-                        "https://bitbucket.org/%s/%s/commits/%s",
-                        bitbucketOwner, bitbucketRepository, fullHash),
+        return buildHyperlink(
+                "https://bitbucket.org/" + bitbucketOwner + "/" + bitbucketRepository
+                        + "/commits/" + fullHash,
                 line);
+    }
+
+    // Replaces capture group 1 of every match with a hyperlink, in a single pass.
+    // appendReplacement moves past what it just wrote, so a hyperlink is never rescanned. The
+    // rescanning version needed a `(?!.*\007)` lookahead to avoid linking its own output, which
+    // also made it skip a match whenever an earlier pass had left a hyperlink further right.
+    private static String hyperlinkEveryMatch(
+            Pattern pattern,
+            String line,
+            Function<String, String> toUrl,
+            Function<String, String> toTitle
+    ) {
+        Matcher matcher = pattern.matcher(line);
+        if (!matcher.find()) {
+            return line;
+        }
+
+        StringBuilder output = new StringBuilder(line.length());
+        do {
+            String id = matcher.group(1);
+            matcher.appendReplacement(output,
+                    Matcher.quoteReplacement(buildHyperlink(toUrl.apply(id), toTitle.apply(id))));
+        } while (matcher.find());
+        matcher.appendTail(output);
+
+        return output.toString();
     }
 }

@@ -1,10 +1,6 @@
 package me.hernancerm;
 
-import static me.hernancerm.GitRemote.Platform.BITBUCKET_ORG;
-import static me.hernancerm.GitRemote.Platform.GITHUB_COM;
 import static org.jline.jansi.Ansi.ansi;
-
-import java.util.Objects;
 
 public class GitLogFormatter {
 
@@ -14,9 +10,7 @@ public class GitLogFormatter {
         boolean authorDiffersFromCommitter = !c.authorName().equals(c.committerName());
         return ansi().render(
                         (isMergeCommit ? "@|bold,yellow " : "@|yellow ")
-                                + (r != null
-                                        ? hyperlinkToCommit(r, c.fullHash(), c.abbreviatedHash())
-                                        : c.abbreviatedHash())
+                                + hyperlinkToCommit(r, c)
                                 + (isMergeCommit ? "*" : " ")
                                 + "|@ "
                         + "@|green "
@@ -26,50 +20,32 @@ public class GitLogFormatter {
                                 + c.authorName()
                                 + (authorDiffersFromCommitter ? "*" : " ")
                                 + "|@"
-                        + ((r != null && BITBUCKET_ORG.equals(r.platform())
-                                ? AnsiUtils.hyperlinkJiraIssues(r.ownerName(), c.refNamesColored())
-                                : c.refNamesColored()))
+                        + hyperlinkRefNames(r, c.refNamesColored())
                         + " "
-                        + (r != null
-                                ? hyperlinkSubjectLine(r, c.subjectLine())
-                                : c.subjectLine()
-                        )).toString();
+                        + hyperlinkSubjectLine(r, c.subjectLine())).toString();
     }
 
-    private String hyperlinkToCommit(GitRemote r, String fullHash, String line) {
-        Objects.requireNonNull(r, "Cannot hyperlink line when the remote is null");
-        Objects.requireNonNull(fullHash, "Cannot hyperlink line when the full hash is null");
-        Objects.requireNonNull(line, "Cannot hyperlink line when the line is null");
-
-        String output = line;
-
-        if (BITBUCKET_ORG.equals(r.platform())) {
-            output = AnsiUtils.hyperlinkToBitbucketCommit(
-                    r.ownerName(), r.repositoryName(), fullHash, line);
-        } else if (GITHUB_COM.equals(r.platform())) {
-            output = AnsiUtils.hyperlinkToGitHubCommit(
-                    r.ownerName(), r.repositoryName(), fullHash, line);
+    private String hyperlinkToCommit(GitRemote r, GitCommit c) {
+        if (r == null) {
+            return c.abbreviatedHash();
         }
+        return AnsiUtils.buildHyperlink(r.commitUrl(c.fullHash()), c.abbreviatedHash());
+    }
 
-        return output;
+    // A ref name can hold a Jira issue key, e.g. a branch named `ABC-123`.
+    private String hyperlinkRefNames(GitRemote r, String refNamesColored) {
+        if (r == null) {
+            return refNamesColored;
+        }
+        return AnsiUtils.hyperlinkJiraIssues(refNamesColored, r::jiraIssueUrl);
     }
 
     private String hyperlinkSubjectLine(GitRemote r, String subjectLine) {
-        Objects.requireNonNull(r, "Cannot hyperlink subject line when the remote is null");
-        Objects.requireNonNull(r, "Cannot hyperlink subject line when the subject line is null");
-
-        String output = subjectLine;
-
-        if (BITBUCKET_ORG.equals(r.platform())) {
-            output = AnsiUtils.hyperlinkJiraIssues(
-                    r.ownerName(), output);
-            output = AnsiUtils.hyperlinkBitbucketPrNumbers(
-                    r.ownerName(), r.repositoryName(), output);
-        } else if (GITHUB_COM.equals(r.platform())) {
-            output = AnsiUtils.hyperlinkGitHubIssuesAndPrNumbers(
-                    r.ownerName(), r.repositoryName(), output);
+        if (r == null) {
+            return subjectLine;
         }
-
-        return output;
+        // A platform with no Jira alongside it yields no url, which leaves the key as plain text.
+        String output = AnsiUtils.hyperlinkJiraIssues(subjectLine, r::jiraIssueUrl);
+        return AnsiUtils.hyperlinkIssueNumbers(output, r::issueUrl);
     }
 }

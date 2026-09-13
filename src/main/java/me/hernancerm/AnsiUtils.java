@@ -1,6 +1,6 @@
 package me.hernancerm;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -35,100 +35,32 @@ public class AnsiUtils {
         }
     }
 
-    public static String hyperlinkJiraIssues(String bitbucketOwner, String line) {
-
-        // Jira URL:    https://<owner>.atlassian.net/browse/<jira-key>
-
-        if (!enabled) {
-            return line;
-        }
-
-        return hyperlinkEveryMatch(JIRA_ISSUE_KEY, line,
-                key -> "https://" + bitbucketOwner + ".atlassian.net/browse/" + key,
-                key -> key);
+    /** Hyperlinks every Jira issue key in the line, e.g. `ABC-123`. */
+    public static String hyperlinkJiraIssues(String line, UnaryOperator<String> toUrl) {
+        return hyperlinkEveryMatch(JIRA_ISSUE_KEY, line, toUrl, issueKey -> issueKey);
     }
 
-    public static String hyperlinkBitbucketPrNumbers(
-            String bitbucketOwner,
-            String bitbucketRepository,
-            String line
-    ) {
-
-        // Bitbucket URL:  https://bitbucket.org/<owner>/<repo>/pull-requests/<pr-number>
-
-        if (!enabled) {
-            return line;
-        }
-
-        return hyperlinkEveryMatch(ISSUE_NUMBER, line,
-                number -> "https://bitbucket.org/" + bitbucketOwner + "/" + bitbucketRepository
-                        + "/pull-requests/" + number,
-                number -> "#" + number);
+    /** Hyperlinks every issue or pull request number in the line, e.g. `#123`. */
+    public static String hyperlinkIssueNumbers(String line, UnaryOperator<String> toUrl) {
+        return hyperlinkEveryMatch(ISSUE_NUMBER, line, toUrl, number -> "#" + number);
     }
 
-    public static String hyperlinkGitHubIssuesAndPrNumbers(
-            String gitHubOwner,
-            String gitHubRepository,
-            String line
-    ) {
-
-        // How this method links both issues and PR numbers?:
-        // A GitHub issue URL redirects to a PR if the id matches a PR instead of an issue.
-
-        // GitHub URL:  https://github.com/<owner>/<repo>/issues/<issue-number>
-
-        if (!enabled) {
-            return line;
-        }
-
-        return hyperlinkEveryMatch(ISSUE_NUMBER, line,
-                number -> "https://github.com/" + gitHubOwner + "/" + gitHubRepository
-                        + "/issues/" + number,
-                number -> "#" + number);
-    }
-
-    public static String hyperlinkToGitHubCommit(
-            String gitHubOwner,
-            String gitHubRepository,
-            String fullHash,
-            String line) {
-
-        if (!enabled) {
-            return line;
-        }
-
-        return buildHyperlink(
-                "https://github.com/" + gitHubOwner + "/" + gitHubRepository
-                        + "/commit/" + fullHash,
-                line);
-    }
-
-    public static String hyperlinkToBitbucketCommit(
-            String bitbucketOwner,
-            String bitbucketRepository,
-            String fullHash,
-            String line) {
-
-        if (!enabled) {
-            return line;
-        }
-
-        return buildHyperlink(
-                "https://bitbucket.org/" + bitbucketOwner + "/" + bitbucketRepository
-                        + "/commits/" + fullHash,
-                line);
-    }
-
-    // Replaces capture group 1 of every match with a hyperlink, in a single pass.
+    // Replaces capture group 1 of every match with a hyperlink, in a single pass. A match
+    // whose url is null is left as plain text, which is how a platform declines to link one
+    // kind of id.
     // appendReplacement moves past what it just wrote, so a hyperlink is never rescanned. The
     // rescanning version needed a `(?!.*\007)` lookahead to avoid linking its own output, which
     // also made it skip a match whenever an earlier pass had left a hyperlink further right.
     private static String hyperlinkEveryMatch(
             Pattern pattern,
             String line,
-            Function<String, String> toUrl,
-            Function<String, String> toTitle
+            UnaryOperator<String> toUrl,
+            UnaryOperator<String> toTitle
     ) {
+        if (!enabled) {
+            return line;
+        }
+
         Matcher matcher = pattern.matcher(line);
         if (!matcher.find()) {
             return line;
@@ -137,8 +69,10 @@ public class AnsiUtils {
         StringBuilder output = new StringBuilder(line.length());
         do {
             String id = matcher.group(1);
-            matcher.appendReplacement(output,
-                    Matcher.quoteReplacement(buildHyperlink(toUrl.apply(id), toTitle.apply(id))));
+            String url = toUrl.apply(id);
+            matcher.appendReplacement(output, Matcher.quoteReplacement(url == null
+                    ? matcher.group()
+                    : buildHyperlink(url, toTitle.apply(id))));
         } while (matcher.find());
         matcher.appendTail(output);
 

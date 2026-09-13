@@ -59,4 +59,23 @@ class GitRemoteTest {
             assertNull(GitRemote.parse(url), String.valueOf(url));
         }
     }
+
+    @Test
+    void urls_givenGitHub_thenBuildEveryShape() {
+        GitRemote remote = GitRemote.parse("https://github.com/o/r.git");
+
+        assertEquals("https://github.com/o/r/commit/3bb28d0", remote.commitUrl("3bb28d0"));
+        assertEquals("https://github.com/o/r/issues/382", remote.issueUrl("382"));
+        // GitHub has no Jira alongside it, so the key stays plain text.
+        assertNull(remote.jiraIssueUrl("ABC-123"));
+    }
+
+    @Test
+    void urls_givenBitbucket_thenBuildEveryShape() {
+        GitRemote remote = GitRemote.parse("https://bitbucket.org/o/r.git");
+
+        assertEquals("https://bitbucket.org/o/r/commits/3bb28d0", remote.commitUrl("3bb28d0"));
+        assertEquals("https://bitbucket.org/o/r/pull-requests/382", remote.issueUrl("382"));
+        assertEquals("https://o.atlassian.net/browse/ABC-123", remote.jiraIssueUrl("ABC-123"));
+    }
 }

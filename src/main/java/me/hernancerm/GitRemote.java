@@ -44,16 +44,56 @@ public record GitRemote(
         return new GitRemote(platform, matcher.group(3), matcher.group(2));
     }
 
-    public enum Platform {
-        BITBUCKET_ORG,
-        GITHUB_COM;
+    /** The web page of one commit. */
+    public String commitUrl(String fullHash) {
+        return switch (platform) {
+            case BITBUCKET_ORG -> baseUrl() + "/commits/" + fullHash;
+            case GITHUB_COM -> baseUrl() + "/commit/" + fullHash;
+        };
+    }
 
+    /**
+     * The web page of an issue or a pull request. On GitHub one url covers both: an issue url
+     * redirects to the pull request when the number belongs to one.
+     */
+    public String issueUrl(String issueNumber) {
+        return switch (platform) {
+            case BITBUCKET_ORG -> baseUrl() + "/pull-requests/" + issueNumber;
+            case GITHUB_COM -> baseUrl() + "/issues/" + issueNumber;
+        };
+    }
+
+    /** The Jira issue page, or null for a platform with no Jira alongside it. */
+    public String jiraIssueUrl(String issueKey) {
+        return switch (platform) {
+            case BITBUCKET_ORG -> "https://" + ownerName + ".atlassian.net/browse/" + issueKey;
+            case GITHUB_COM -> null;
+        };
+    }
+
+    private String baseUrl() {
+        return "https://" + platform.host + "/" + ownerName + "/" + repositoryName;
+    }
+
+    public enum Platform {
+
+        BITBUCKET_ORG("bitbucket.org"),
+        GITHUB_COM("github.com");
+
+        private final String host;
+
+        Platform(String host) {
+            this.host = host;
+        }
+
+        /** Returns null for an unsupported host, which costs only the hyperlinks. */
         public static Platform from(String host) {
-            return switch (host) {
-                case "bitbucket.org" -> BITBUCKET_ORG;
-                case "github.com" -> GITHUB_COM;
-                default -> null;
-            };
+            for (Platform platform : values()) {
+                if (platform.host.equals(host)) {
+                    return platform;
+                }
+            }
+            return null;
         }
     }
 }

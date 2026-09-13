@@ -1,5 +1,8 @@
 package me.hernancerm;
 
+import me.hernancerm.git.GitLogArgs;
+import me.hernancerm.git.GitLogRunner;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.BeforeEach;

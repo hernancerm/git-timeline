@@ -1,4 +1,4 @@
-package me.hernancerm;
+package me.hernancerm.git;
 
 import static org.junit.jupiter.api.Assertions.*;
 

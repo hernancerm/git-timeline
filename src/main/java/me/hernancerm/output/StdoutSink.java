@@ -1,4 +1,4 @@
-package me.hernancerm;
+package me.hernancerm.output;
 
 public class StdoutSink implements OutputSink {
 

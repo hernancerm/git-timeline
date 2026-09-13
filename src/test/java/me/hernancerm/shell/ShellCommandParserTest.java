@@ -1,4 +1,4 @@
-package me.hernancerm;
+package me.hernancerm.shell;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

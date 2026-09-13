@@ -1,4 +1,4 @@
-package me.hernancerm;
+package me.hernancerm.git;
 
 public record GitCommit(
         String fullHash,

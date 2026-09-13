@@ -1,7 +1,12 @@
-package me.hernancerm;
+package me.hernancerm.git;
 
-import static me.hernancerm.CommitLineParser.splitCommitLine;
-import static me.hernancerm.CommitLineParser.toCommit;
+import me.hernancerm.output.OutputSink;
+import me.hernancerm.output.PagerSink;
+import me.hernancerm.output.StdoutSink;
+import me.hernancerm.shell.GitQuery;
+
+import static me.hernancerm.git.CommitLineParser.splitCommitLine;
+import static me.hernancerm.git.CommitLineParser.toCommit;
 import static org.jline.jansi.Ansi.ansi;
 
 import java.io.BufferedReader;

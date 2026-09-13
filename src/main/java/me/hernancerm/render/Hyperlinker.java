@@ -1,4 +1,4 @@
-package me.hernancerm;
+package me.hernancerm.render;
 
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;

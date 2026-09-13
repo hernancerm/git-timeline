@@ -1,4 +1,4 @@
-package me.hernancerm;
+package me.hernancerm.output;
 
 /**
  * A destination for formatted git-log lines. The reader on the other end can go away before the

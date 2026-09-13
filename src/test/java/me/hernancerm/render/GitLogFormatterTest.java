@@ -1,4 +1,7 @@
-package me.hernancerm;
+package me.hernancerm.render;
+
+import me.hernancerm.git.GitCommit;
+import me.hernancerm.git.GitRemote;
 
 import static org.junit.jupiter.api.Assertions.*;
 

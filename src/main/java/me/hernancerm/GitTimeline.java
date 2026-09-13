@@ -1,5 +1,10 @@
 package me.hernancerm;
 
+import me.hernancerm.git.GitLogArgs;
+import me.hernancerm.git.GitLogRunner;
+import me.hernancerm.render.GitLogFormatter;
+import me.hernancerm.render.Hyperlinker;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;

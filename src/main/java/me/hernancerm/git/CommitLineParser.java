@@ -1,4 +1,4 @@
-package me.hernancerm;
+package me.hernancerm.git;
 
 import java.util.regex.Pattern;
 

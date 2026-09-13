@@ -1,7 +1,7 @@
-package me.hernancerm;
+package me.hernancerm.output;
 
-import static me.hernancerm.PagerSink.resolveCommand;
-import static me.hernancerm.PagerSink.startCorePagerLookup;
+import static me.hernancerm.output.PagerSink.resolveCommand;
+import static me.hernancerm.output.PagerSink.startCorePagerLookup;
 import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.HashMap;

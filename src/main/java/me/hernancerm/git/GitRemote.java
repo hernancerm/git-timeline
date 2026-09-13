@@ -1,4 +1,6 @@
-package me.hernancerm;
+package me.hernancerm.git;
+
+import me.hernancerm.shell.GitQuery;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

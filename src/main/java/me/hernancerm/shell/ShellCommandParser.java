@@ -1,4 +1,4 @@
-package me.hernancerm;
+package me.hernancerm.shell;
 
 import java.util.ArrayList;
 import java.util.List;

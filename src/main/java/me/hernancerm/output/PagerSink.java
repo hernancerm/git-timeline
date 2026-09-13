@@ -1,4 +1,7 @@
-package me.hernancerm;
+package me.hernancerm.output;
+
+import me.hernancerm.shell.GitQuery;
+import me.hernancerm.shell.ShellCommandParser;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;

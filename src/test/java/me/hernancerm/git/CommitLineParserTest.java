@@ -1,8 +1,8 @@
-package me.hernancerm;
+package me.hernancerm.git;
 
-import static me.hernancerm.CommitLineParser.DELIMITER;
-import static me.hernancerm.CommitLineParser.splitCommitLine;
-import static me.hernancerm.CommitLineParser.toCommit;
+import static me.hernancerm.git.CommitLineParser.DELIMITER;
+import static me.hernancerm.git.CommitLineParser.splitCommitLine;
+import static me.hernancerm.git.CommitLineParser.toCommit;
 import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;

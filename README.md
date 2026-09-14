@@ -195,8 +195,11 @@ Execute it with `java -jar ./target/git-timeline.jar`.
 
 ## Versioning
 
-git-timeline does not follow semantic versioning.
+git-timeline follows [semantic versioning](https://semver.org/spec/v2.0.0.html): `MAJOR.MINOR.PATCH`.
 
-- `x.y`. Here is what an increment on each part means:
-  - `x`: At least one breaking change is included in the release.
-  - `y`: Only non-breaking changes.
+The public API is the command line interface: the options accepted and the exit codes. The
+printed commit lines are meant for humans, so changes to them are not breaking changes.
+
+Releases are listed in [CHANGELOG.md](./CHANGELOG.md).
+
+Versions before 2.2.0 used a `MAJOR.MINOR` scheme where `MINOR` covered both features and fixes.

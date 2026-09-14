@@ -42,8 +42,8 @@ git-timeline has very few additional options. Learn them through `git timeline -
 ## Installation
 
 > [!NOTE]
-> Prebuilt binaries cover macOS and Linux, on both arm64 and x86_64. On anything else, [build
-> from source](#build-from-source).
+> Prebuilt binaries cover macOS on arm64, and Linux on arm64 and x86_64. On anything else,
+> [build from source](#build-from-source).
 
 ### Homebrew
 
@@ -184,7 +184,8 @@ Startup is the most impactful figure in normal daily use.
 
 The project is written in Java 25.
 
-The steps below should work for macOS (arm64 and x86_64) and Linux (arm64 and x86_64).
+The steps below should work for macOS (arm64) and Linux (arm64 and x86_64). The native
+binary needs GraalVM, which ships no macOS Intel build; on Intel Macs build the uber JAR.
 
 ### Native binary
 

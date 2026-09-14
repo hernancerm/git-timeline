@@ -12,7 +12,7 @@ and as of 2.2.0 this project adheres to
 ### Added
 
 - Zsh completions for `git timeline`, mirroring those of `git log`.
-- Prebuilt Linux arm64 and x86 binaries published on release, installable with Homebrew.
+- Prebuilt Linux arm64 and x86_64 binaries published on release, installable with Homebrew.
 - A `.sha256` published next to each release download.
 
 ### Changed
@@ -21,6 +21,11 @@ and as of 2.2.0 this project adheres to
 - Git lookups are started at once and the unused ones are skipped.
 - Hyperlinks are applied in a single pass over each line.
 - Requires Java 25 to build.
+
+### Removed
+
+- Prebuilt macOS x86_64 binary. GraalVM 25 ships no macOS Intel build, so it cannot be
+  produced. Intel Macs can still use the uber JAR.
 
 ### Fixed
 

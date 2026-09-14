@@ -77,8 +77,6 @@ jobs:
         include:
           - os: macos-15
             asset: git-timeline-macos-arm64
-          - os: macos-15-intel
-            asset: git-timeline-macos-x86_64
           - os: ubuntu-24.04-arm
             asset: git-timeline-linux-arm64
           - os: ubuntu-latest

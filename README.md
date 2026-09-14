@@ -42,8 +42,8 @@ git-timeline has very few additional options. Learn them through `git timeline -
 ## Installation
 
 > [!NOTE]
-> Only macOS is supported through Homebrew. For Linux see the section below
-> [Build from source](#build-from-source).
+> Homebrew covers macOS and Linux, on both arm64 and x86. On anything else, [build from
+> source](#build-from-source).
 
 1. Add the Homebrew tap:
 

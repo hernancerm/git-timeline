@@ -123,9 +123,12 @@ Completions only work for `git timeline`, not `git-timeline`. They mirror the co
 
 ### Zsh
 
-There are two `_git` completion implementations in the wild and they look up a different function
-name, so pick the file that matches yours. Install it into any directory on your `$FPATH`, then
-restart your shell.
+If you installed git-timeline with Homebrew, just restart your shell, and skip the rest of this
+section.
+
+Otherwise: there are two `_git` completion implementations in the wild and they look up a different
+function name, so pick the file that matches yours. Install it into any directory on your `$FPATH`,
+then restart your shell.
 
 If your Git is installed with Homebrew:
 

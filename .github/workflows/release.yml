@@ -116,7 +116,7 @@ jobs:
       - name: Package binary
         run: |
           cp -v target/git-timeline .
-          tar czf '${{ matrix.asset }}.tar.gz' git-timeline
+          tar czf '${{ matrix.asset }}.tar.gz' git-timeline completions
           shasum -a 256 '${{ matrix.asset }}.tar.gz' > '${{ matrix.asset }}.tar.gz.sha256'
       - name: Upload to the workflow
         uses: actions/upload-artifact@v4

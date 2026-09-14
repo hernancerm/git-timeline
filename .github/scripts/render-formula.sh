@@ -61,6 +61,9 @@ class GitTimeline < Formula
 
   def install
     bin.install "git-timeline"
+    # Both are '#compdef -', so each only defines its own function. Whichever
+    # _git the user has picks up the name it looks for; the other sits unused.
+    zsh_completion.install "completions/_git_timeline", "completions/_git-timeline"
   end
 
   test do

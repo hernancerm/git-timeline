@@ -9,6 +9,8 @@ and as of 2.2.0 this project adheres to
 
 ## [Unreleased]
 
+## [2.2.0] - 2026-09-14
+
 ### Added
 
 - Zsh completions for `git timeline`, mirroring those of `git log`.
@@ -88,7 +90,8 @@ Initial release.
 - Paged output, respecting `GIT_PAGER` and `PAGER`.
 - Pass-through of all options and arguments to git-log, including `--graph` and `--color`.
 
-[Unreleased]: https://github.com/hernancerm/git-timeline/compare/2.1...HEAD
+[Unreleased]: https://github.com/hernancerm/git-timeline/compare/2.2.0...HEAD
+[2.2.0]: https://github.com/hernancerm/git-timeline/compare/2.1...2.2.0
 [2.1]: https://github.com/hernancerm/git-timeline/compare/2.0...2.1
 [2.0]: https://github.com/hernancerm/git-timeline/compare/1.1...2.0
 [1.1]: https://github.com/hernancerm/git-timeline/compare/1.0...1.1

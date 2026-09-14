@@ -14,7 +14,7 @@ import org.jline.jansi.Ansi;
 public class GitTimeline implements Callable<Integer> {
 
     private static final String NAME = "git-timeline";
-    private static final String VERSION = "2.2.0-SNAPSHOT";
+    private static final String VERSION = "2.2.0";
 
     private final String[] args;
     private final GitLogRunner gitLogRunner;

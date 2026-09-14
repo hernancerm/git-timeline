@@ -42,8 +42,10 @@ git-timeline has very few additional options. Learn them through `git timeline -
 ## Installation
 
 > [!NOTE]
-> Homebrew covers macOS and Linux, on both arm64 and x86. On anything else, [build from
-> source](#build-from-source).
+> Prebuilt binaries cover macOS and Linux, on both arm64 and x86_64. On anything else, [build
+> from source](#build-from-source).
+
+### Homebrew
 
 1. Add the Homebrew tap:
 
@@ -57,20 +59,36 @@ brew tap hernancerm/formulas https://github.com/hernancerm/formulas
 brew install git-timeline
 ```
 
-3. Verify installation by executing in a git repo:
+### mise-en-place
 
+```text
+mise use -g github:hernancerm/git-timeline
 ```
+
+### Verify installation
+
+1. Execute in a git repo:
+
+```text
 git timeline
 ```
 
-Optional: `~/.gitconfig`: Create the below alias to shorten `git timeline` to `git l`.
+2. Optional: `~/.gitconfig`: Create the below alias to shorten `git timeline` to `git l`.
 
 ```text
 [alias]
     l = timeline
 ```
 
+3. Optional: `~/.zshrc`: Create the below alias to shorten `git l` to `g l`.
+
+```text
+alias g='git'
+```
+
 ## Upgrade
+
+### Homebrew
 
 1. Fetch the newest version of all formulas.
 
@@ -82,6 +100,12 @@ brew update
 
 ```text
 brew upgrade git-timeline
+```
+
+### mise-en-place
+
+```text
+mise upgrade github:hernancerm/git-timeline
 ```
 
 ## Configuration
@@ -157,7 +181,7 @@ Startup is the most impactful figure in normal daily use.
 
 The project is written in Java 25.
 
-The steps below should work for macOS (arm64 and x86) and Linux (arm64 and x86).
+The steps below should work for macOS (arm64 and x86_64) and Linux (arm64 and x86_64).
 
 ### Native binary
 

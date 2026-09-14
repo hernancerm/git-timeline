@@ -11,8 +11,8 @@ version="${1:?usage: render-formula.sh <version> <dist dir>}"
 dist="${2:?usage: render-formula.sh <version> <dist dir>}"
 url_base="https://github.com/hernancerm/git-timeline/releases/download/${version}"
 
-assets='git-timeline-macos-arm64 git-timeline-macos-x86
-        git-timeline-linux-arm64 git-timeline-linux-x86'
+assets='git-timeline-macos-arm64 git-timeline-macos-x86_64
+        git-timeline-linux-arm64 git-timeline-linux-x86_64'
 
 for asset in ${assets}
 do
@@ -42,8 +42,8 @@ class GitTimeline < Formula
     end
 
     on_intel do
-      url "${url_base}/git-timeline-macos-x86.tar.gz"
-      sha256 "$(sha git-timeline-macos-x86)"
+      url "${url_base}/git-timeline-macos-x86_64.tar.gz"
+      sha256 "$(sha git-timeline-macos-x86_64)"
     end
   end
 
@@ -54,8 +54,8 @@ class GitTimeline < Formula
     end
 
     on_intel do
-      url "${url_base}/git-timeline-linux-x86.tar.gz"
-      sha256 "$(sha git-timeline-linux-x86)"
+      url "${url_base}/git-timeline-linux-x86_64.tar.gz"
+      sha256 "$(sha git-timeline-linux-x86_64)"
     end
   end
 

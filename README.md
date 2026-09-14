@@ -195,11 +195,11 @@ Execute it with `java -jar ./target/git-timeline.jar`.
 
 ## Versioning
 
-git-timeline follows [semantic versioning](https://semver.org/spec/v2.0.0.html): `MAJOR.MINOR.PATCH`.
+Since version 2.2.0, git-timeline follows [semantic
+versioning](https://semver.org/spec/v2.0.0.html).
 
-The public API is the command line interface: the options accepted and the exit codes. The
-printed commit lines are meant for humans, so changes to them are not breaking changes.
+The public API is the command line interface: the options and the exit codes. The printed commit
+lines are not part of the public API, so changes to them are not breaking changes.
 
 Releases are listed in [CHANGELOG.md](./CHANGELOG.md).
 
-Versions before 2.2.0 used a `MAJOR.MINOR` scheme where `MINOR` covered both features and fixes.

@@ -14,7 +14,8 @@ public record GitRemote(
     // suffix is optional. Groups: 1:host, 2:owner, 3:repository.
     // https://git-scm.com/docs/git-clone#_git_urls
     private static final Pattern REMOTE_URL = Pattern.compile(
-            "^(?:(?:ssh|git|https?|ftps?)://)?(?:[^@/]+@)?([^/:]+)(?::\\d+)?[:/](.+)/([^/]+?)(?:[.]git)?/?$");
+            "^(?:(?:ssh|git|https?|ftps?)://)?(?:[^@/]+@)?"
+                    + "([^/:]+)(?::\\d+)?[:/](.+)/([^/]+?)(?:[.]git)?/?$");
 
     /** Starts the lookup of the url of the remote `origin`. */
     public static GitQuery startLookup() {

@@ -25,7 +25,7 @@ jobs:
       sha: ${{ steps.sha.outputs.sha }}
     steps:
       - name: Check out main
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           ref: main
           fetch-depth: 0
@@ -40,7 +40,7 @@ jobs:
             exit 1
           fi
       - name: Cache Maven
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('pom.xml', '.mvn/wrapper/maven-wrapper.properties') }}
@@ -61,7 +61,7 @@ jobs:
       - name: Save the release edit as a patch
         run: git diff > release.patch
       - name: Upload the patch
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-patch
           path: release.patch
@@ -83,17 +83,17 @@ jobs:
             asset: git-timeline-linux-x86_64
     steps:
       - name: Check out the commit being released
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ needs.prepare.outputs.sha }}
       - name: Download the patch
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-patch
       - name: Apply the release version
         run: git apply release.patch && rm release.patch
       - name: Cache Maven
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('pom.xml', '.mvn/wrapper/maven-wrapper.properties') }}
@@ -117,7 +117,7 @@ jobs:
           tar czf '${{ matrix.asset }}.tar.gz' git-timeline completions
           shasum -a 256 '${{ matrix.asset }}.tar.gz' > '${{ matrix.asset }}.tar.gz.sha256'
       - name: Upload to the workflow
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.asset }}
           path: ${{ matrix.asset }}.tar.gz*
@@ -129,17 +129,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the commit being released
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ needs.prepare.outputs.sha }}
       - name: Download the patch
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-patch
       - name: Apply the release version
         run: git apply release.patch && rm release.patch
       - name: Cache Maven
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('pom.xml', '.mvn/wrapper/maven-wrapper.properties') }}
@@ -157,7 +157,7 @@ jobs:
           cp -v target/git-timeline.jar .
           shasum -a 256 git-timeline.jar > git-timeline.jar.sha256
       - name: Upload to the workflow
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: git-timeline-jar
           path: git-timeline.jar*
@@ -171,7 +171,7 @@ jobs:
       contents: write
     steps:
       - name: Check out main
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           ref: main
           fetch-depth: 0
@@ -186,7 +186,7 @@ jobs:
             exit 1
           fi
       - name: Download the patch
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: release-patch
       - name: Apply the release version
@@ -203,7 +203,7 @@ jobs:
           git push origin main
           git push origin "${VERSION}"
       - name: Download the binaries
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: git-timeline-*
           path: dist
@@ -247,18 +247,18 @@ jobs:
             exit 1
           fi
       - name: Check out git-timeline
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           ref: ${{ needs.prepare.outputs.sha }}
       # Both must land after the checkout above: it cleans the workspace root.
       - name: Download the checksums
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: git-timeline-*
           path: dist
           merge-multiple: true
       - name: Check out the tap
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           repository: hernancerm/formulas
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
@@ -294,11 +294,11 @@ jobs:
       contents: write
     steps:
       - name: Check out main
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
         with:
           ref: main
       - name: Cache Maven
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('pom.xml', '.mvn/wrapper/maven-wrapper.properties') }}

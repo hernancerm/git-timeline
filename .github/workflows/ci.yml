@@ -13,10 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repo
-        uses: actions/checkout@v6.0.2
+        uses: actions/checkout@v7.0.1
       - name: Cache Maven
         # Holds both the Maven the wrapper downloads and every dependency and plugin.
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.m2
           key: ${{ runner.os }}-maven-${{ hashFiles('pom.xml', '.mvn/wrapper/maven-wrapper.properties') }}

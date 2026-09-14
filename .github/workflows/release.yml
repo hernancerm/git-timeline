@@ -214,13 +214,7 @@ jobs:
         env:
           VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          {
-            .github/scripts/print-changelog-section.sh "${VERSION}"
-            printf '\n## Install\n\n'
-            printf '```text\nbrew update && brew upgrade git-timeline\n```\n\n'
-            printf 'Or download the binary for your platform below. '
-            printf 'Each download ships a `.sha256` next to it.\n'
-          } > notes.md
+          .github/scripts/print-changelog-section.sh "${VERSION}" > notes.md
           cat notes.md
       - name: Create the release
         env:

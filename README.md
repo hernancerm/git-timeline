@@ -53,7 +53,13 @@ git-timeline has very few additional options. Learn them through `git timeline -
 brew tap hernancerm/formulas https://github.com/hernancerm/formulas
 ```
 
-2. Install git-timeline:
+2. Trust the tap. Homebrew 7 refuses to load formulas from third-party taps until you do.
+
+```text
+brew trust hernancerm/formulas
+```
+
+3. Install git-timeline:
 
 ```text
 brew install git-timeline

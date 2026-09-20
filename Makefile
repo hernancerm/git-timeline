@@ -1,5 +1,5 @@
-UBERJAR_MVN_CMD := ./mvnw -Puberjar clean package
-NATIVE_IMAGE_MVN_CMD := ./mvnw -Pnative clean package
+UBERJAR_MVN_CMD := ./mvnw -Puberjar clean package -DskipTests
+NATIVE_IMAGE_MVN_CMD := ./mvnw -Pnative clean package -DskipTests
 
 .PHONY: uber
 uber:

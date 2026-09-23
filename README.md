@@ -84,6 +84,8 @@ git timeline
 ```text
 [alias]
     l = timeline
+    # Bonus alias: List last 5 commits from HEAD. (Mnemonic: log last).
+    ll = timeline -5
 ```
 
 3. Optional: `~/.zshrc`: Create the below alias to shorten `git l` to `g l`.

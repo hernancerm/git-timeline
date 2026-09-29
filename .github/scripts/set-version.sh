@@ -6,7 +6,7 @@
 set -euo pipefail
 
 version="${1:?usage: set-version.sh <version>}"
-java_file='src/main/java/me/hernancerm/GitTimeline.java'
+java_file='src/main/java/xyz/hernancerm/GitTimeline.java'
 
 ./mvnw -q versions:set -DnewVersion="${version}" -DgenerateBackupPoms=false
 

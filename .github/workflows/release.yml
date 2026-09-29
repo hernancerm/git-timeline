@@ -199,7 +199,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add pom.xml CHANGELOG.md src/main/java/me/hernancerm/GitTimeline.java
+          git add pom.xml CHANGELOG.md src/main/java/xyz/hernancerm/GitTimeline.java
           git commit -m "chore(release): ${VERSION}"
           git tag "${VERSION}"
           git push origin main
@@ -314,6 +314,6 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add pom.xml src/main/java/me/hernancerm/GitTimeline.java
+          git add pom.xml src/main/java/xyz/hernancerm/GitTimeline.java
           git commit -m 'chore: start next development iteration'
           git push origin main

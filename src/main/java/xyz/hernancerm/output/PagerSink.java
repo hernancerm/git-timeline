@@ -7,7 +7,10 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
-import java.util.function.UnaryOperator;
+import java.util.function.Function;
+
+import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.Nullable;
 
 public class PagerSink implements OutputSink {
 
@@ -27,7 +30,7 @@ public class PagerSink implements OutputSink {
         return startCorePagerLookup(System::getenv);
     }
 
-    static GitQuery startCorePagerLookup(UnaryOperator<String> env) {
+    static GitQuery startCorePagerLookup(Function<String, ? extends @Nullable String> env) {
 
         // GIT_PAGER wins over core.pager, so the subprocess is only worth it when it is unset.
         if (isSet(env.apply("GIT_PAGER"))) {
@@ -50,9 +53,10 @@ public class PagerSink implements OutputSink {
     }
 
     // Precedence: https://git-scm.com/docs/git-var#Documentation/git-var.txt-GITPAGER
-    static List<String> resolveCommand(String corePagerCommand, UnaryOperator<String> env) {
+    static List<String> resolveCommand(
+            @Nullable String corePagerCommand, Function<String, ? extends @Nullable String> env) {
 
-        String gitPagerCommand = env.apply("GIT_PAGER");
+        @Nullable String gitPagerCommand = env.apply("GIT_PAGER");
         if (isSet(gitPagerCommand)) {
             return ShellCommandParser.parse(gitPagerCommand);
         }
@@ -61,7 +65,7 @@ public class PagerSink implements OutputSink {
             return ShellCommandParser.parse(corePagerCommand);
         }
 
-        String pagerCommand = env.apply("PAGER");
+        @Nullable String pagerCommand = env.apply("PAGER");
         if (isSet(pagerCommand)) {
             return ShellCommandParser.parse(pagerCommand);
         }
@@ -70,7 +74,8 @@ public class PagerSink implements OutputSink {
     }
 
     // An unset variable and an empty one both name no pager.
-    private static boolean isSet(String value) {
+    @Contract("null -> false")
+    private static boolean isSet(@Nullable String value) {
         return value != null && !value.isEmpty();
     }
 

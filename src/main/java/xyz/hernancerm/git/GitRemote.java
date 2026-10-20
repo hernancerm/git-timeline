@@ -5,6 +5,8 @@ import xyz.hernancerm.shell.GitQuery;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.jspecify.annotations.Nullable;
+
 public record GitRemote(
         Platform platform,
         String repositoryName,
@@ -24,7 +26,7 @@ public record GitRemote(
     }
 
     /** Returns null for no remote, a non-git url (e.g. a local path) or an unsupported host. */
-    public static GitRemote parse(String originUrl) {
+    public static @Nullable GitRemote parse(@Nullable String originUrl) {
         if (originUrl == null || originUrl.isEmpty()) {
             return null;
         }
@@ -59,7 +61,7 @@ public record GitRemote(
     }
 
     /** The Jira issue page, or null for a platform with no Jira. */
-    public String jiraIssueUrl(String issueKey) {
+    public @Nullable String jiraIssueUrl(String issueKey) {
         return switch (platform) {
             case BITBUCKET_ORG -> "https://" + ownerName + ".atlassian.net/browse/" + issueKey;
             case GITHUB_COM -> null;
@@ -82,7 +84,7 @@ public record GitRemote(
         }
 
         /** Returns null for an unsupported host. */
-        public static Platform from(String host) {
+        public static @Nullable Platform from(String host) {
             for (Platform platform : values()) {
                 if (platform.host.equals(host)) {
                     return platform;

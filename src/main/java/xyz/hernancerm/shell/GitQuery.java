@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * A git subprocess started ahead of the moment its output is needed, so that it runs alongside
  * whatever the caller does next instead of before it.
@@ -11,10 +13,10 @@ import java.io.InputStreamReader;
 public class GitQuery {
 
     // Null for a skipped query. Naming the value here keeps it out of both call sites.
-    private final String what;
-    private final Process process;
+    private final @Nullable String what;
+    private final @Nullable Process process;
 
-    private GitQuery(String what, Process process) {
+    private GitQuery(@Nullable String what, @Nullable Process process) {
         this.what = what;
         this.process = process;
     }
@@ -34,7 +36,7 @@ public class GitQuery {
     }
 
     /** Returns the first line of stdout, or null when the query was skipped. */
-    public String firstLine() {
+    public @Nullable String firstLine() {
         if (process == null) {
             return null;
         }

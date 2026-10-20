@@ -5,6 +5,8 @@ import xyz.hernancerm.git.GitRemote;
 
 import static org.jline.jansi.Ansi.ansi;
 
+import org.jspecify.annotations.Nullable;
+
 public class GitLogFormatter {
 
     private final Hyperlinker hyperlinker;
@@ -14,7 +16,7 @@ public class GitLogFormatter {
     }
 
     // A null remote leaves every hyperlink out.
-    public String format(GitCommit c, GitRemote r) {
+    public String format(GitCommit c, @Nullable GitRemote r) {
         boolean isMergeCommit = c.abbreviatedParentHashes().length > 1;
         boolean authorDiffersFromCommitter = !c.authorName().equals(c.committerName());
         return ansi().render(
@@ -34,7 +36,7 @@ public class GitLogFormatter {
                         + hyperlinkSubjectLine(r, c.subjectLine())).toString();
     }
 
-    private String hyperlinkToCommit(GitRemote r, GitCommit c) {
+    private String hyperlinkToCommit(@Nullable GitRemote r, GitCommit c) {
         if (r == null) {
             return c.abbreviatedHash();
         }
@@ -42,14 +44,14 @@ public class GitLogFormatter {
     }
 
     // A ref name can hold a Jira issue key, e.g. a branch named `ABC-123`.
-    private String hyperlinkRefNames(GitRemote r, String refNamesColored) {
+    private String hyperlinkRefNames(@Nullable GitRemote r, String refNamesColored) {
         if (r == null) {
             return refNamesColored;
         }
         return hyperlinker.linkJiraIssues(refNamesColored, r::jiraIssueUrl);
     }
 
-    private String hyperlinkSubjectLine(GitRemote r, String subjectLine) {
+    private String hyperlinkSubjectLine(@Nullable GitRemote r, String subjectLine) {
         if (r == null) {
             return subjectLine;
         }

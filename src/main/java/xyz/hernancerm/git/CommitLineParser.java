@@ -2,10 +2,8 @@ package xyz.hernancerm.git;
 
 import java.util.regex.Pattern;
 
-/**
- * The line format git-log is asked for, and the parser that reads it back. Kept together so one
- * is changed next to the other.
- */
+import org.jspecify.annotations.Nullable;
+
 public class CommitLineParser {
 
     // Field delimiter. No field before the subject line can hold it:
@@ -32,7 +30,7 @@ public class CommitLineParser {
     }
 
     /** Returns the fields of a commit line, or null when the line carries no commit data. */
-    static String[] splitCommitLine(String line) {
+    static String @Nullable [] splitCommitLine(String line) {
         String[] parts = DELIMITER_PATTERN.split(line, PART_COUNT);
         return parts.length == PART_COUNT ? parts : null;
     }

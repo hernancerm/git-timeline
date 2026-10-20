@@ -18,6 +18,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
+import org.jspecify.annotations.Nullable;
+
 /** Runs git-log and writes every line of it, formatted, to the sink. */
 public class GitLogRunner {
 
@@ -30,8 +32,9 @@ public class GitLogRunner {
     // What a shell reports for a SIGTERM kill (128 + 15), the signal destroy() sends.
     private static final int SIGTERM_EXIT_CODE = 143;
 
-    public int run(GitLogArgs args, BiFunction<GitCommit, GitRemote, String> commitFormatter)
-            throws IOException, InterruptedException {
+    public int run(
+            GitLogArgs args, BiFunction<GitCommit, @Nullable GitRemote, String> commitFormatter
+    ) throws IOException, InterruptedException {
 
         // Starting a query does not block, so these run alongside each other and git-log.
         GitQuery remoteLookup =
@@ -47,7 +50,7 @@ public class GitLogRunner {
         // Closing the sink starts the pager's interactive mode, so it waits for the read loop.
         try (OutputSink sink = openSink(args, corePagerLookup)) {
             // Null when color is off, which drops every hyperlink.
-            GitRemote gitRemote = GitRemote.parse(remoteLookup.firstLine());
+            @Nullable GitRemote gitRemote = GitRemote.parse(remoteLookup.firstLine());
 
             try (
                     var inputStreamReader = new InputStreamReader(process.getInputStream());

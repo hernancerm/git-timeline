@@ -1,8 +1,11 @@
 package xyz.hernancerm.render;
 
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import org.jspecify.annotations.Nullable;
 
 /** Builds terminal hyperlinks. Whether they are wanted is settled once, at construction. */
 public class Hyperlinker {
@@ -30,12 +33,14 @@ public class Hyperlinker {
     }
 
     /** Hyperlinks every Jira issue key in the line, e.g. `ABC-123`. */
-    public String linkJiraIssues(String line, UnaryOperator<String> toUrl) {
+    public String linkJiraIssues(
+            String line, Function<String, ? extends @Nullable String> toUrl) {
         return linkEveryMatch(JIRA_ISSUE_KEY, line, toUrl, issueKey -> issueKey);
     }
 
     /** Hyperlinks every issue or pull request number in the line, e.g. `#123`. */
-    public String linkIssueNumbers(String line, UnaryOperator<String> toUrl) {
+    public String linkIssueNumbers(
+            String line, Function<String, ? extends @Nullable String> toUrl) {
         return linkEveryMatch(ISSUE_NUMBER, line, toUrl, number -> "#" + number);
     }
 
@@ -46,7 +51,7 @@ public class Hyperlinker {
     private String linkEveryMatch(
             Pattern pattern,
             String line,
-            UnaryOperator<String> toUrl,
+            Function<String, ? extends @Nullable String> toUrl,
             UnaryOperator<String> toTitle
     ) {
         if (!enabled) {
@@ -61,7 +66,7 @@ public class Hyperlinker {
         StringBuilder output = new StringBuilder(line.length());
         do {
             String id = matcher.group(1);
-            String url = toUrl.apply(id);
+            @Nullable String url = toUrl.apply(id);
             matcher.appendReplacement(output, Matcher.quoteReplacement(url == null
                     ? matcher.group()
                     : link(url, toTitle.apply(id))));

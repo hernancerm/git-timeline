@@ -35,10 +35,6 @@ git-timeline has very few additional options. Learn them through `git timeline -
   - [`--pretty`](https://git-scm.com/docs/git-log#Documentation/git-log.txt---prettyformat) and [`--format`](https://git-scm.com/docs/git-log#Documentation/git-log.txt---prettyformat) take over the commit format.
   - Works with [`--graph`](https://git-scm.com/docs/git-log#Documentation/git-log.txt---graph).
 
-## Limitations
-
-- Not tested in any way in Windows.
-
 ## Installation
 
 > [!NOTE]

@@ -83,7 +83,14 @@ jobs:
             asset: git-timeline-linux-arm64
           - os: ubuntu-latest
             asset: git-timeline-linux-x86_64
+          - os: windows-latest
+            asset: git-timeline-windows-x86_64
     steps:
+      - name: Keep LF line endings
+        # The runner checks out with CRLF, and the LF release patch would then
+        # not apply.
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
       - name: Check out the commit being released
         uses: actions/checkout@v7.0.1
         with:
@@ -111,18 +118,38 @@ jobs:
           mise_toml: |
             [tools]
             java = "graalvm-community-25.0.2"
+      - name: Set up MSVC
+        # Native Image on Windows links with MSVC, which must be on PATH.
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
       - name: Build binary
+        if: runner.os != 'Windows'
         run: make bin
+      - name: Build binary (Windows)
+        # Same as `make bin`, without relying on make being on the runner.
+        if: runner.os == 'Windows'
+        run: ./mvnw.cmd -Pnative clean package -DskipTests
       - name: Package binary
+        if: runner.os != 'Windows'
         run: |
           cp -v target/git-timeline .
           tar czf '${{ matrix.asset }}.tar.gz' git-timeline completions
           shasum -a 256 '${{ matrix.asset }}.tar.gz' > '${{ matrix.asset }}.tar.gz.sha256'
+      - name: Package binary (Windows)
+        if: runner.os == 'Windows'
+        env:
+          ASSET: ${{ matrix.asset }}
+        run: |
+          Copy-Item -Verbose target/git-timeline.exe .
+          Compress-Archive -Path git-timeline.exe, completions -DestinationPath "$env:ASSET.zip"
+          $hash = (Get-FileHash -Algorithm SHA256 "$env:ASSET.zip").Hash.ToLower()
+          # Written by hand to match the `shasum` format and LF ending of the other assets.
+          [IO.File]::WriteAllText("$PWD/$env:ASSET.zip.sha256", "$hash  $env:ASSET.zip`n")
       - name: Upload to the workflow
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.asset }}
-          path: ${{ matrix.asset }}.tar.gz*
+          path: ${{ matrix.asset }}.*
           if-no-files-found: error
 
   jar:

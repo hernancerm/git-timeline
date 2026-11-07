@@ -9,6 +9,10 @@ and as of 2.2.0 this project adheres to
 
 ## [Unreleased]
 
+### Added
+
+- Prebuilt Windows x86_64 binary published on release.
+
 ## [2.2.0] - 2026-09-14
 
 ### Added

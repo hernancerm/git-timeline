@@ -9,6 +9,8 @@ and as of 2.2.0 this project adheres to
 
 ## [Unreleased]
 
+## [2.2.1] - 2026-11-07
+
 ### Added
 
 - Prebuilt Windows x86_64 binary published on release.
@@ -94,7 +96,8 @@ Initial release.
 - Paged output, respecting `GIT_PAGER` and `PAGER`.
 - Pass-through of all options and arguments to git-log, including `--graph` and `--color`.
 
-[Unreleased]: https://github.com/hernancerm/git-timeline/compare/2.2.0...HEAD
+[Unreleased]: https://github.com/hernancerm/git-timeline/compare/2.2.1...HEAD
+[2.2.1]: https://github.com/hernancerm/git-timeline/compare/2.2.0...2.2.1
 [2.2.0]: https://github.com/hernancerm/git-timeline/compare/2.1...2.2.0
 [2.1]: https://github.com/hernancerm/git-timeline/compare/2.0...2.1
 [2.0]: https://github.com/hernancerm/git-timeline/compare/1.1...2.0
